@@ -1,90 +1,131 @@
-# -*- coding: utf-8 -*-
-"""
-estat_search.py — helper to discover e-Stat dataset IDs (getStatsList)
+# scripts/estat_search.py
+# Helper: search e-Stat datasets and print statsDataId + title
 
-Examples:
-  python scripts/estat_search.py --kw "国勢調査 65歳以上 区市町村 2020"
-  python scripts/estat_search.py --kw "国勢調査 単独世帯 65歳 区 2020"
-  python scripts/estat_search.py --kw "生活保護 被保護実人員 区市町村 2020"
-  python scripts/estat_search.py --kw "課税 所得 区市町村 2020"
-"""
+import os
+import sys
+import argparse
+import textwrap
+from typing import Optional
 
-import os, sys, argparse, requests
+import requests
 from dotenv import load_dotenv
+import xml.etree.ElementTree as ET
 
 ENDPOINT = "https://api.e-stat.go.jp/rest/3.0/app/getStatsList"
 
-def main():
+
+def load_app_id() -> str:
     load_dotenv()
     app_id = os.getenv("ESTAT_APP_ID", "").strip()
     if not app_id:
         print("❌ Missing ESTAT_APP_ID in .env", file=sys.stderr)
         sys.exit(1)
+    return app_id
 
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--kw", required=True, help="Japanese keywords (例: '国勢調査 65歳以上 区市町村 2020')")
-    ap.add_argument("--limit", type=int, default=100)
-    # Optional narrowing: statistics bureau (00200521) is common for Census tables
-    ap.add_argument("--stats-code", default="00200521", help="statsCode filter (default: 00200521)")
-    # Optional: survey years (e.g., 2020)
-    ap.add_argument("--survey-year", default="", help="SURVEY_YEAR / OPEN_YEARS (e.g., 2020)")
+
+def parse_xml_and_print(xml_bytes: bytes) -> None:
+    """
+    Parse XML from getStatsList and print a compact table of results.
+    """
+    try:
+        root = ET.fromstring(xml_bytes)
+    except ET.ParseError:
+        print("⚠ Could not parse XML. First 500 chars:\n")
+        text = xml_bytes.decode("utf-8", errors="replace")
+        print(text[:500])
+        return
+
+    # Check result status
+    status = root.findtext(".//RESULT/STATUS")
+    msg = root.findtext(".//RESULT/ERROR_MSG") or ""
+    if status is not None:
+        print(f"RESULT STATUS = {status}  MESSAGE = {msg}")
+        print()
+
+    # getStatsList uses DATALIST_INF, not STATISTICAL_DATA
+    datalist = root.find(".//DATALIST_INF")
+    if datalist is None:
+        print("⚠ No DATALIST_INF node found in XML. First 500 chars:\n")
+        text = xml_bytes.decode("utf-8", errors="replace")
+        print(text[:500])
+        return
+
+    tables = datalist.findall(".//TABLE_INF")
+    if not tables:
+        print("⚠ No TABLE_INF entries found. First 500 chars:\n")
+        text = xml_bytes.decode("utf-8", errors="replace")
+        print(text[:500])
+        return
+
+    print(f"✅ Found {len(tables)} dataset(s):\n")
+
+    for i, t in enumerate(tables, start=1):
+        # statsDataId is usually an attribute "id"
+        stats_id = t.attrib.get("id") or t.findtext("TABLE_INF_ID") or "(unknown)"
+        stat_name = (t.findtext("STAT_NAME") or "").strip()
+        title = (t.findtext("TITLE") or "").strip()
+        survey_date = (t.findtext("SURVEY_DATE") or "").strip()
+
+        print(f"[{i}] statsDataId = {stats_id}")
+        if stat_name:
+            print(f"    STAT_NAME  = {stat_name}")
+        if title:
+            wrapped = textwrap.wrap(title, width=60)
+            print(f"    TITLE      = {wrapped[0]}")
+            for line in wrapped[1:]:
+                print(f"                 {line}")
+        if survey_date:
+            print(f"    SURVEY_DATE = {survey_date}")
+        print()
+
+
+
+def main() -> None:
+    app_id = load_app_id()
+
+    ap = argparse.ArgumentParser(
+        description="Search e-Stat datasets and show statsDataId + title"
+    )
+    ap.add_argument("--kw", required=True, help="Japanese keyword(s) for searchWord")
+    ap.add_argument(
+        "--limit", type=int, default=50, help="Max number of datasets to return"
+    )
+    ap.add_argument(
+        "--stats-code",
+        default=None,
+        help="Optional bureau statsCode (e.g., 00200521 for 統計局).",
+    )
+    ap.add_argument(
+        "--survey-year",
+        default=None,
+        help="Survey year filter (e.g., 2020).",
+    )
     args = ap.parse_args()
 
     params = {
         "appId": app_id,
-        "lang": "J",                 # Japanese metadata
-        "searchWord": args.kw,       # requests will URL-encode UTF-8 correctly
+        "lang": "J",
+        "searchWord": args.kw,
         "limit": str(args.limit),
-        "statsCode": args.stats_code
     }
     if args.survey_year:
-        params["surveyYears"] = args.survey_year  # narrower filter
+        params["surveyYears"] = args.survey_year
+    if args.stats_code:
+        params["statsCode"] = args.stats_code
 
-    try:
-        r = requests.get(ENDPOINT, params=params, timeout=60)
-    except requests.RequestException as e:
-        print(f"❌ Network error: {e}", file=sys.stderr)
-        sys.exit(2)
+    print(f"🔎 Querying e-Stat with params: {params}")
+    r = requests.get(ENDPOINT, params=params, timeout=60)
+    ct = r.headers.get("Content-Type", "")
 
-    # If e-Stat returns HTML (errors), show a helpful snippet
-    ctype = r.headers.get("Content-Type", "")
-    if "json" not in ctype.lower():
-        print("⚠️ e-Stat did not return JSON.")
-        print(f"HTTP {r.status_code}  Content-Type: {ctype}")
-        print("Request URL:")
-        print(r.url)
-        print("\nFirst 500 chars of response:")
+    print(f"HTTP {r.status_code}  Content-Type: {ct}")
+    if r.status_code != 200:
+        print("❌ Non-200 response:", file=sys.stderr)
         print(r.text[:500])
-        sys.exit(3)
+        r.raise_for_status()
 
-    try:
-        js = r.json()
-    except ValueError:
-        print("⚠️ Could not decode JSON. Showing first 500 chars:")
-        print(r.text[:500])
-        sys.exit(4)
+    # We *expect* XML here
+    parse_xml_and_print(r.content)
 
-    gl = js.get("GET_STATS_LIST", {})
-    dlinf = gl.get("DATALIST_INF", {})
-    tables = dlinf.get("TABLE_INF", [])
-    if isinstance(tables, dict):
-        tables = [tables]
-
-    if not tables:
-        msg = gl.get("RESULT", {}).get("ERROR_MSG") or "No results."
-        print("⚠️", msg)
-        print("Debug URL:", r.url)
-        sys.exit(0)
-
-    print(f"✅ Found {len(tables)} results:\n")
-    for t in tables:
-        sid   = t.get("@id")
-        title = t.get("TITLE", {}).get("$", "")
-        stat  = t.get("STATISTICS_NAME", {}).get("$", "")
-        cycle = t.get("CYCLE", "")
-        time  = t.get("SURVEY_DATE", "")
-        cls   = t.get("STAT_NAME", {}).get("$", "")
-        print(f"- statsDataId={sid} | {title} | {stat} | {cycle} | {time}")
 
 if __name__ == "__main__":
     main()

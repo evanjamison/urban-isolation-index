@@ -35,7 +35,8 @@ TOKYO_WARDS = {
     "13119":"板橋区","13120":"練馬区","13121":"足立区","13122":"葛飾区","13123":"江戸川区",
 }
 
-ESTAT_ENDPOINT = "https://api.e-stat.go.jp/rest/3.0/app/getStatsData"
+ESTAT_ENDPOINT = "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData"
+
 
 
 # ----------------------- helpers -----------------------
@@ -64,13 +65,18 @@ def _parse_cat_string(s: str | None) -> Dict[str, str]:
     return out
 
 def _request_estat(app_id: str, stats_data_id: str, cd_time: Optional[str],
-                   cd_area: List[str], extra_params: Optional[Dict[str, str]] = None,
-                   tries: int = 5) -> Dict[str, Any]:
+                   cd_area: List[str], extra_params: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    """
+    Call e-Stat getStatsData (JSON endpoint) with basic paging and backoff.
+    Returns a dict {"items": [...]} where items is a list of VALUE records.
+    """
     params = {
         "appId": app_id,
         "statsDataId": stats_data_id,
         "cdArea": ",".join(cd_area),
+        "lang": "J",
     }
+    # cdTime is optional and sometimes tricky; only send if explicitly given.
     if cd_time:
         params["cdTime"] = cd_time
     if extra_params:
@@ -78,33 +84,49 @@ def _request_estat(app_id: str, stats_data_id: str, cd_time: Optional[str],
 
     start = 1
     items: List[Dict[str, Any]] = []
+
     while True:
         p = dict(params)
         p["startPosition"] = str(start)
         p["limit"] = "100000"
 
-        for attempt in range(tries):
+        # --- retry loop ---
+        for attempt in range(5):
             r = requests.get(ESTAT_ENDPOINT, params=p, timeout=60)
             if r.status_code == 200:
                 break
             if r.status_code in (429, 503):
+                # simple exponential backoff
                 time.sleep(0.7 * (2 ** attempt))
                 continue
+            print(f"❌ HTTP {r.status_code} from e-Stat", file=sys.stderr)
+            print(r.text[:500])
             r.raise_for_status()
 
-        data = r.json()
+        try:
+            data = r.json()
+        except ValueError:
+            # Most likely e-Stat returned XML with an error message.
+            print("❌ e-Stat did not return JSON. First 500 chars of response:", file=sys.stderr)
+            print(r.text[:500])
+            raise
+
         stat = data.get("GET_STATS_DATA", {}).get("STATISTICAL_DATA", {})
         value = stat.get("DATA_INF", {}).get("VALUE", [])
-        if isinstance(value, dict):
+        if isinstance(value, dict):  # sometimes it's a single object
             value = [value]
         if not value:
             break
 
         items.extend(value)
+
+        # crude pagination: stop when this page has fewer than the requested limit
         if len(value) < int(p["limit"]):
             break
         start += int(p["limit"])
+
     return {"items": items}
+
 
 def _flatten_values(records: List[Dict[str, Any]]) -> pd.DataFrame:
     rows = []

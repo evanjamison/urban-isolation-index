@@ -65,7 +65,6 @@ These allow comparison between a conceptual model and an empirical (unsupervised
 
 ---
 
-## 📁 Project Structure
 
 
 

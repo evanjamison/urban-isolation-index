@@ -16,8 +16,6 @@ This project builds a data-driven **Isolation Risk Index (IRI)** for Tokyo, inte
 
 ---
 
-### 2. PCA vs Designed Isolation Index — Side-by-Side Comparison
-![Tokyo D-IRI vs PCA](out/maps/tokyo_iso_index_comparison.png)
 
 ---
 
@@ -26,7 +24,7 @@ This project builds a data-driven **Isolation Risk Index (IRI)** for Tokyo, inte
 
 ---
 
-### 4. Designed vs PCA Isolation Index (Full Size)
+### 3. Designed vs PCA Isolation Index (Full Size)
 ![Tokyo Designed vs PCA Isolation Index](out/spatial_tokyo/tokyo_diri_vs_pca.png)
 
 ---

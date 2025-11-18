@@ -6,21 +6,28 @@ This project builds a data-driven **Isolation Risk Index (IRI)** for Tokyo, inte
 ---
 
 ## 🗺️ Key Maps
+  
+> These image paths match your repository structure under `out/spatial_tokyo/` and `out/maps/`.
 
-> ⚠️ These image paths assume the plots are saved under `out/spatial_tokyo/`.  
-> If your files are in a different folder, just adjust the paths below.
+---
 
 ### 1. Tokyo Designed Isolation Index (D-IRI)
+![Tokyo Designed Isolation Index](out/maps/tokyo_iso_index.png)
 
-![Tokyo Designed Isolation Index (D-IRI)](out/spatial_tokyo/tokyo_designed_index.png)
+---
 
-### 2. Local Moran’s I (LISA) Cluster Map
+### 2. PCA vs Designed Isolation Index — Side-by-Side Comparison
+![Tokyo D-IRI vs PCA](out/maps/tokyo_iso_index_comparison.png)
 
-![Tokyo Designed Isolation Index – LISA Clusters](out/spatial_tokyo/tokyo_diri_lisa_clusters.png)
+---
 
-### 3. Designed vs PCA Isolation Index (Side-by-Side)
+### 3. Local Moran’s I (LISA) Cluster Map
+![Tokyo D-IRI — LISA Clusters](out/spatial_tokyo/tokyo_diri_lisa_clusters.png)
 
-![Tokyo D-IRI vs PCA Isolation Index](out/spatial_tokyo/tokyo_diri_vs_pca.png)
+---
+
+### 4. Designed vs PCA Isolation Index (Full Size)
+![Tokyo Designed vs PCA Isolation Index](out/spatial_tokyo/tokyo_diri_vs_pca.png)
 
 ---
 

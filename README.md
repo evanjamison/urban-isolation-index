@@ -6,23 +6,14 @@ This project builds a data-driven **Isolation Risk Index (IRI)** for Tokyo, inte
 ---
 
 ## 🗺️ Key Maps
-  
-> These image paths match your repository structure under `out/spatial_tokyo/` and `out/maps/`.
 
----
+> These image paths match your repository structure under `out/spatial_tokyo/` and `out/maps/`.
 
 ### 1. Tokyo Designed Isolation Index (D-IRI)
 ![Tokyo Designed Isolation Index](out/maps/tokyo_iso_index.png)
 
----
-
-
----
-
-### 3. Local Moran’s I (LISA) Cluster Map
+### 2. Local Moran’s I (LISA) Cluster Map
 ![Tokyo D-IRI — LISA Clusters](out/spatial_tokyo/tokyo_diri_lisa_clusters.png)
-
----
 
 ### 3. Designed vs PCA Isolation Index (Full Size)
 ![Tokyo Designed vs PCA Isolation Index](out/spatial_tokyo/tokyo_diri_vs_pca.png)
@@ -33,15 +24,15 @@ This project builds a data-driven **Isolation Risk Index (IRI)** for Tokyo, inte
 
 Two complementary indices are constructed:
 
-### 1. **Designed Isolation Index (D-IRI)**  
+### **1. Designed Isolation Index (D-IRI)**
 A theory-driven composite index using standardized indicators:
 - 👵 Percent of residents aged 65+
 - 🏠 Percent of older adults living alone
 - 💴 Poverty rate
-- 🏥 Accessibility score (distance / access to community resources)
+- 🏥 Accessibility score (distance to community resources)
 - 🚉 Transit density (rail station density)
 
-### 2. **PCA-Based Isolation Index**  
+### **2. PCA-Based Isolation Index**
 A data-driven index based on **PC1** from principal component analysis.
 
 These allow comparison between a conceptual model and an empirical (unsupervised) model.
@@ -50,42 +41,40 @@ These allow comparison between a conceptual model and an empirical (unsupervised
 
 ## ⚙️ Features & Capabilities
 
-### **Data Ingestion**
-- Loads demographics and SES data  
-- Imports accessibility proxy data  
-- Processes railway station geodata and computes station density  
+### Data Ingestion
+- Demographics and SES ingestion  
+- Accessibility dataset ingestion  
+- Transit geodata ingestion  
 
-### **Feature Engineering**
-- Z-score scaling for comparability  
+### Feature Engineering
+- Z-score scaling  
 - Access score computation  
 - Transit score computation  
-- Full dataset merging with spatial geometries  
+- Spatial merge with ward polygons  
 
-### **Index Construction**
+### Index Construction
 - Designed Isolation Index (D-IRI)  
-- PCA Isolation Index (PC1)  
+- PCA Isolation Index  
 
-### **Statistical Analysis**
-- 📈 Correlation analysis  
-- 🧮 PCA loadings and explained variance  
-- 📉 OLS regression diagnostics  
-- 🌐 Global Moran’s I (spatial autocorrelation)  
-- 🗺️ LISA cluster detection (local spatial clusters)  
+### Spatial Statistics
+- Global Moran’s I  
+- Local Moran’s I (LISA clusters)  
+- Regression diagnostics  
 
-### **Visualization**
-- Choropleth: Designed IRI  
-- Choropleth: PCA IRI  
-- Side-by-side comparison maps  
-- LISA cluster map (High-High, Low-Low, etc.)
+### Visualization Outputs
+- Designed IRI map  
+- PCA IRI map  
+- Side-by-side comparison  
+- LISA cluster map  
 
 ---
 
 ## 🔍 Key Findings (Current Results)
 
-- The **D-IRI and PCA index strongly agree**, validating the conceptual model.  
-- **Spatial clustering is significant** (Moran’s I > 0, p ≈ 0.003).  
-- Central wards form **Low-Low clusters** (low isolation surrounded by low isolation).  
-- Several outer wards show **higher isolation**, influenced by aging, single-living rates, poverty, and weaker transit/access.
+- The **D-IRI and PCA index strongly correlate**, validating the conceptual model.
+- **Spatial clustering is statistically significant** (Moran’s I ≈ 0.23, p ≈ 0.003).
+- Central wards show **Low-Low** isolation clusters.
+- Outer wards show **higher isolation** driven by aging, single-living, and weaker transit/access.
 
 ---
 
@@ -95,10 +84,10 @@ These allow comparison between a conceptual model and an empirical (unsupervised
 urban-isolation-index/
 │
 ├── data/
-│   ├── external/         # GeoJSON and external sources
-│   ├── raw/              # Unprocessed inputs
-│   ├── interim/          # Intermediate feature layers
-│   └── processed/        # Final merged datasets
+│   ├── external/            # GeoJSON + e-Stat source files
+│   ├── raw/                 # Unprocessed downloads
+│   ├── interim/             # Intermediate engineered layers
+│   └── processed/           # Final merged datasets (Tokyo)
 │
 ├── scripts/
 │   ├── build_designed_index.py
@@ -116,19 +105,18 @@ urban-isolation-index/
 │   └── ...
 │
 ├── out/
-│   ├── plots/
+│   ├── maps/
+│   │   ├── tokyo_iso_index.png
+│   │   ├── tokyo_iso_index_comparison.png
 │   ├── spatial_tokyo/
-│   │   ├── tokyo_designed_index.png
 │   │   ├── tokyo_diri_lisa_clusters.png
-│   │   └── tokyo_diri_vs_pca.png
+│   │   ├── tokyo_diri_vs_pca.png
 │   └── modeling_with_access/
 │       ├── ols_with_access_summary.txt
 │       └── ols_with_access_coefs.csv
 │
 └── README.md
 
-
----
 
 
 

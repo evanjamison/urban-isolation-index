@@ -42,7 +42,7 @@ Current work focuses on extending the same framework to Osaka City, pending iden
 
 ## 🗺️ Key Maps
 
-> These image paths match your repository structure under `out/spatial_tokyo/` and `out/maps/`.
+> These image paths exist under `out/spatial_tokyo/` and `out/maps/`.
 
 ### 1. Tokyo Designed Isolation Index (D-IRI)
 ![Tokyo Designed Isolation Index](out/maps/tokyo_iso_index.png)

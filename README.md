@@ -1,7 +1,42 @@
 # 🏙️ Tokyo Urban Isolation Index  
 ### Social Isolation Risk Modeling for Tokyo’s 23 Wards
 
-This project builds a data-driven **Isolation Risk Index (IRI)** for Tokyo, integrating demographic, socioeconomic, accessibility, transit, and spatial clustering methods. It provides a replicable urban analytics workflow for identifying areas where older adults may face elevated isolation risk.
+This project develops a strong spacial social data science framework in order to quanify and vizualize the urban social isolation risk, specifically for older adults in Tokyo's 23 wards. This project uses the 2020 Population Census (e-Stat). Japan's rapid aging demographic, as well as the rise of single elderly households have made social isolation (社会的孤立) an important policy concern. This study applies rigorious spacial, computational, and statistical methods in order to examine how demographic, socioeconomic, and accessibility factors often interact to create isolation risk across different urban neighborhoods and living situations.
+
+# Executive Summary 
+
+### Research Contribution
+The project constructs a reproducible Designed Isolation Index (D-IRI) using ward-level indicators:
+- Percentage of residents aged 65+
+- Percentage of older adults living alone
+- Poverty-related socioeconomic measures
+- Transit accessibility (rail station density)
+- Spatial access to community facilities
+
+All variables are normalized and combined into a composite index grounded in social epidemiology and urban studies. The index is further validated using Principal Component Analysis (PCA) to confirm its latent structure and identify dominant dimensions of vulnerability.
+
+### Spacial Data Science Approach
+Using GeoPandas and PySAL, the project applies advanced spatial statistics including:
+- Global Moran’s I to assess spatial autocorrelation
+- Local Indicators of Spatial Association (LISA)
+- High/low-risk cluster detection (High-High, Low-Low, etc.)
+
+These methods reveal clear geographic patterns: core wards with strong transit access and higher affluence show consistently low isolation risk, while peripheral wards exhibit clustering of higher vulnerability.
+
+### Reproducible Computational Workflow
+A modular Python pipeline automates:
+1. Data ingestion from the e-Stat API
+2. Cleaning and feature engineering
+3.Construction of D-IRI
+4.PCA-based alternative index
+5. Spatial statistics and ward-level mapping
+
+
+All intermediate and processed datasets are output in Parquet and CSV formats, making the analysis transparent and fully reproducible.
+
+
+### Future Development
+Current work focuses on extending the same framework to Osaka City, pending identification of suitable ward-level aging indicators from e-Stat. This multi-city expansion will enable comparative urban aging research across major Japanese metropolitan regions.
 
 ---
 
@@ -20,7 +55,7 @@ This project builds a data-driven **Isolation Risk Index (IRI)** for Tokyo, inte
 
 ---
 
-## 📌 Project Overview
+## 📌 Methods Overview
 
 Two complementary indices are constructed:
 
@@ -39,7 +74,7 @@ These allow comparison between a conceptual model and an empirical (unsupervised
 
 ---
 
-## ⚙️ Features & Capabilities
+## Features & Capabilities
 
 ### Data Ingestion
 - Demographics and SES ingestion  

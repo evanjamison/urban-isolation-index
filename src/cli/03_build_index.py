@@ -1,6 +1,7 @@
 # src/cli/03_build_index.py
 
 from __future__ import annotations
+
 import argparse
 from pathlib import Path
 import pandas as pd
@@ -17,44 +18,131 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 
+# ---------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------
+def default_paths_for_city(city: str) -> tuple[Path, Path, Path]:
+    """
+    Return (features_in, out_parquet, out_csv) defaults for a given city.
+    """
+    if city == "tokyo":
+        features_in = PROJECT_ROOT / "data" / "interim" / "jp_tokyo_full_features.parquet"
+        out_parquet = PROJECT_ROOT / "data" / "processed" / "jp_tokyo_index.parquet"
+        out_csv = PROJECT_ROOT / "data" / "processed" / "jp_tokyo_index.csv"
+    elif city == "osaka":
+        features_in = PROJECT_ROOT / "data" / "interim" / "jp_osaka_full_features.parquet"
+        out_parquet = PROJECT_ROOT / "data" / "processed" / "jp_osaka_index.parquet"
+        out_csv = PROJECT_ROOT / "data" / "processed" / "jp_osaka_index.csv"
+    else:
+        raise ValueError(f"Unknown city: {city}")
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Build Tokyo isolation index from jp_tokyo_features."
+    return features_in, out_parquet, out_csv
+
+
+
+
+def isolation_config_for_city(city: str) -> IsolationIndexConfig:
+    """
+    Build the isolation index config for a given city.
+
+    Currently both Tokyo and Osaka use the same metric set and weights:
+      - pct_age65p
+      - pct_single65p
+      - poverty_rate
+
+    You can extend this later (e.g., to add access metrics) by editing
+    metrics/weights here.
+    """
+    metrics = ["pct_age65p", "pct_single65p", "poverty_rate"]
+    weights = {
+        "pct_age65p": 0.4,
+        "pct_single65p": 0.3,
+        "poverty_rate": 0.3,
+    }
+
+    # Keep a consistent column name across cities so downstream code still works
+    index_col = "iso_index"
+
+    return IsolationIndexConfig(
+        metrics=metrics,
+        weights=weights,
+        index_col=index_col,
     )
+
+
+# ---------------------------------------------------------------------
+# Main CLI
+# ---------------------------------------------------------------------
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Build isolation index (D-IRI style) for a Japanese city "
+            "(Tokyo or Osaka) from pre-computed features."
+        )
+    )
+
+    parser.add_argument(
+        "--city",
+        choices=["tokyo", "osaka"],
+        default="tokyo",
+        help="Target city to build index for. Default: tokyo",
+    )
+
     parser.add_argument(
         "--features-in",
-        default="data/interim/jp_tokyo_features.parquet",
-        help="Input features parquet.",
+        type=Path,
+        default=None,
+        help=(
+            "Input features parquet. If omitted, a city-specific default is used:\n"
+            "  tokyo → data/interim/jp_tokyo_features.parquet\n"
+            "  osaka → data/interim/jp_osaka_features.parquet"
+        ),
     )
     parser.add_argument(
         "--out-parquet",
-        default="data/processed/jp_tokyo_index.parquet",
-        help="Output parquet path.",
+        type=Path,
+        default=None,
+        help=(
+            "Output parquet path. If omitted, a city-specific default is used:\n"
+            "  tokyo → data/processed/jp_tokyo_index.parquet\n"
+            "  osaka → data/processed/jp_osaka_index.parquet"
+        ),
     )
     parser.add_argument(
         "--out-csv",
-        default="data/processed/jp_tokyo_index.csv",
-        help="Optional CSV export.",
+        type=Path,
+        default=None,
+        help=(
+                "Optional CSV export. If omitted, a city-specific default is used:\n"
+                "  tokyo → data/processed/jp_tokyo_index.csv\n"
+                "  osaka → data/processed/jp_osaka_index.csv"
+        ),
     )
+
     args = parser.parse_args()
 
-    in_path = Path(args.features_in)
-    if not in_path.exists():
-        raise SystemExit(f"Input features file not found: {in_path}")
+    # Fill in city-specific defaults if not provided
+    def_feats, def_parquet, def_csv = default_paths_for_city(args.city)
+    features_in = args.features_in or def_feats
+    out_parquet = args.out_parquet or def_parquet
+    out_csv = args.out_csv or def_csv
 
-    df = pd.read_parquet(in_path)
+    out_parquet.parent.mkdir(parents=True, exist_ok=True)
+    out_csv.parent.mkdir(parents=True, exist_ok=True)
 
-    config = IsolationIndexConfig()  # you can tweak weights here if you like
-    df_idx = compute_isolation_index(df, config=config)
+    print(f"[info] Building isolation index for city = {args.city}")
+    print(f"[info] Reading features from: {features_in}")
 
-    Path(args.out_parquet).parent.mkdir(parents=True, exist_ok=True)
-    df_idx.to_parquet(args.out_parquet, index=False)
-    df_idx.to_csv(args.out_csv, index=False, encoding="utf-8-sig")
+    features_df = pd.read_parquet(features_in)
 
-    print(f"✅ Saved index parquet: {args.out_parquet}")
-    print(f"✅ Saved index CSV:     {args.out_csv}")
-    print(df_idx.head())
+    cfg = isolation_config_for_city(args.city)
+    result_df = compute_isolation_index(features_df, cfg)
+
+    result_df.to_parquet(out_parquet, index=False)
+    result_df.to_csv(out_csv, index=False)
+
+    print(f"[ok] Wrote isolation index parquet → {out_parquet}")
+    print(f"[ok] Wrote isolation index CSV     → {out_csv}")
 
 
 if __name__ == "__main__":

@@ -18,4 +18,6 @@ libpysal>=4.10
 esda>=2.6
 splot>=1.1.7
 matplotlib>=3.8
+plotly>=5.20
+kaleido>=0.2
 

@@ -1,0 +1,93 @@
+---
+title: "PSTAT 127 HW 5"
+author: "Evan Jamison"
+date: "2025-11-25"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1.
+
+a.
+```{r}
+library(faraway)
+data(wbca)
+names(wbca)
+model <- glm(Class ~ ., data = wbca, family = binomial)
+summary(model)
+
+```
+
+```{r}
+model$deviance  
+model$df.residual  
+```
+
+b.
+```{r}
+full_model <- glm(Class ~ ., data = wbca, family = binomial)
+
+reduced_modeling <- step(full_model, direction = "backward")
+summary(reduced_modeling)
+```
+
+c.
+```{r}
+names(wbca)
+newpatient <- data.frame(
+  Adhes = 1,BNucl = 1, Chrom = 3,
+  Epith = 2, Mitos = 1, NNucl = 1,
+  Thick = 4, UShap = 1, USize = 1
+)
+predict(reduced_modeling, newdata = newpatient, type = "response")
+```
+
+d.
+```{r}
+p_hat <- predict(reduced_modeling, type = "response")
+prediction_class <- ifelse(p_hat > 0.5, "benign", "malignant")
+table(prediction_class, wbca$Class)
+type_1 <- sum(prediction_class == "malignant" & wbca$Class == 1)
+type_2 <- sum(prediction_class == "benign" & wbca$Class == 0)
+type_1
+type_2  
+```
+
+
+
+2.
+a.
+```{r}
+library(datasets)
+library(glmnet)
+
+carsCols = as.matrix(mtcars[,c(3,4,5,6,7)])
+
+head(carsCols)
+tail(carsCols, 4)
+
+dim(carsCols)
+
+fit.glmnet1 = glmnet( x= carsCols, y= mtcars[,1], alpha=1)
+```
+
+(part b I did by hand on a seperate upload)
+
+c.
+```{r}
+plot(fit.glmnet1)
+```
+The plot shows lasso coefficient paths for each predictors as lambda penalty varies. On the far left of the graph all coefficients are at 0. As the L1 Norm values increase and we move farther right along the graph, the dark blue line denoting a coefficient becomes negative. This variable is likely strongly  associated with the response. As lambda continues to decrease, more lines begin to deviate from 0. Green and cyan in particular begin to increase. At the far right as lambda continues to decrease significantly most predictors are non-zero, and the L1 Norm is the largest. Therefore overall, as the graph and L1 Norm values increase and move right, the coefficients become stronger and more significant in explaining the response values.
+
+
+(part d is done by hand on a separate upload)
+
+e.
+```{r}
+fit.glmnet.5foldCV = cv.glmnet(x=carsCols, y = mtcars[,1], alpha = 1, nfolds = 5)
+coef(fit.glmnet.5foldCV, s = "lambda.min")
+```
+write up done by hand on separate upload

@@ -1,0 +1,267 @@
+---
+title: "PSTAT 131 HW 3"
+author: "Evan Jamison"
+date: "2025-11-21"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ISLR)
+library(glmnet)
+library(tree)
+library(maptree)
+library(randomForest)
+library(gbm)
+library(ROCR)
+```
+
+Predicting carseats sales using regularized regression methods
+
+```{r}
+set.seed(123)
+dat <- model.matrix(Sales~., Carseats)
+train = sample(nrow(dat), 50)
+x.train = dat[train, ]
+y.train = Carseats[train, ]$Sales
+# The rest as test data
+x.test = dat[-train, ]
+y.test = Carseats[-train, ]$Sales
+```
+
+a.
+```{r}
+lambda.list.ridge = 1000 * exp(seq(0, log(1e-5), length = 100))
+ridge = cv.glmnet(
+  x.train, 
+  y.train,
+  alpha = 0,      
+  lambda = lambda.list.ridge,
+  nfolds = 5
+)
+
+blr = ridge$lambda.min
+blr
+
+ridge_final = glmnet(
+  x.train,
+  y.train,
+  alpha = 0,
+  lambda = blr
+)
+
+coef(ridge_final)
+```
+
+b.
+```{r}
+ridge_train_pred = predict(ridge_final, newx = x.train)
+training_mse = mean((ridge_train_pred - y.train)^2)
+training_mse
+
+ridge_test_pred = predict(ridge_final, newx = x.test)
+test_mse = mean((ridge_test_pred - y.test)^2)
+test_mse
+
+```
+I find that the test MSE is significantly higher than the training MSE. However, this is common/normal behavior. 
+
+c.
+```{r}
+lambda.list.lasso = 2 * exp(seq(0, log(1e-4), length = 100))
+
+lasso = cv.glmnet(
+  x.train,
+  y.train,
+  alpha = 1,               
+  lambda = lambda.list.lasso,
+  nfolds = 10
+)
+
+bll = lasso$lambda.min
+bll
+
+lasso_final = glmnet(
+  x.train,
+  y.train,
+  alpha = 1,
+  lambda = bll
+)
+
+coef(lasso_final)
+
+
+```
+the lasso model did shrink many coefficients towards 0 (some very close) but only USYes to 0. This means the lasso penalty was not strong enough to completely neutralize the predictors.
+
+
+d.
+```{r}
+lasso_train_pred = predict(lasso_final, newx = x.train)
+lasso_train_mse = mean((lasso_train_pred - y.train)^2)
+lasso_train_mse
+
+lasso_test_pred = predict(lasso_final, newx = x.test)
+lasso_test_mse = mean((lasso_test_pred - y.test)^2)
+lasso_test_mse
+
+```
+I find that similarly to ridge regression, the test MSE is significantly higher than the training MSE.
+
+
+e.
+
+Both Ridge and Lasso in this instance behaved quite similarly, both producing very similar training and test mses, with ridge performing just slightly better. Both lambda values chosen by each model were very small, however the lasso model produced a smaller lambda. Generally, ridge only shrinks coeficients while lasso while often completely set some to zero, but perhaps since the trianing size was only 50, the lasso model did not get rid of any predictors so the two models performed very similarly. 
+
+
+
+Using bootstrap to compute uncertainty about a parameter of interes
+
+```{r}
+shots  <- 784
+makes  <- 311
+B <- 10000  
+shots_total <- c(rep(1, makes), rep(0, shots - makes))
+
+bootstrap_fg <- replicate(B, {
+  mean(sample(shots, size = shots, replace = TRUE))
+})
+
+ci_99 <- quantile(bootstrap_fg, prob = c(0.005, 0.995))
+ci_99
+```
+
+
+
+Analyzing drug use
+
+a.
+```{r}
+setwd("C:/Users/user/OneDrive/Documents")
+
+drug <- read_csv('drug.csv',
+                col_names = c('ID','Age','Gender','Education','Country',
+                'Ethnicity','Nscore','Escore','Oscore','Ascore','Cscore',
+                'Impulsive','SS','Alcohol','Amphet','Amyl','Benzos',
+                'Caff','Cannabis','Choc','Coke','Crack','Ecstasy',
+                'Heroin','Ketamine','LegalH','LSD','Meth','Mushrooms',
+                'Nicotine','Semer','VSA')
+)
+
+drug <- drug %>%
+  mutate(
+    recent_nicotine_use = ifelse(Nicotine >= "CL3", "Yes", "No"),
+    recent_nicotine_use = factor(recent_nicotine_use)
+  )
+head(drug)
+```
+
+b.
+```{r}
+drug_sub <- drug %>%
+  select(Age:SS, recent_nicotine_use)
+head(drug_sub)
+```
+
+c.
+```{r}
+train_idx <- sample(nrow(drug_sub), 1000)
+train <- drug_sub[train_idx, ]
+test  <- drug_sub[-train_idx, ]
+```
+
+d.
+```{r}
+logit_reg <- glm(recent_nicotine_use ~ ., 
+                 data = train, 
+                 family = "binomial")
+summary(logit_reg)
+```
+
+e.
+```{r}
+tree_model <- tree(recent_nicotine_use ~ ., data = train)
+summary(tree_model)
+plot(tree_model)
+text(tree_model, pretty = 0)
+```
+
+f.
+```{r}
+cv_model <- cv.tree(tree_model, FUN = prune.misclass)
+cv_model$size   
+cv_model$dev    
+best_s <- cv_model$size[which.min(cv_model$dev)]
+best_s
+```
+
+g.
+```{r}
+pruned <- prune.misclass(tree_model, best = best_s)
+draw.tree(pruned, nodeinfo = TRUE)
+```
+The variable that is split first is Age.
+
+h.
+```{r}
+tree_pred <- predict(pruned, newdata = test, type = "class")
+confusion_matrix <- table(True = test$recent_nicotine_use,
+                  Pred = tree_pred)
+confusion_matrix
+TP  <- confusion_matrix["Yes", "Yes"]
+FN  <- confusion_matrix["Yes", "No"]
+FP  <- confusion_matrix["No",  "Yes"]
+TN  <- confusion_matrix["No",  "No"]
+TPR <- TP / (TP + FN)
+FPR <- FP / (FP + TN)
+TPR
+FPR
+```
+
+
+i.
+```{r}
+train$recent_nicotine_use_num <- ifelse(train$recent_nicotine_use == "Yes", 1, 0)
+test$recent_nicotine_use_num  <- ifelse(test$recent_nicotine_use  == "Yes", 1, 0)
+boost_model <- gbm(
+  recent_nicotine_use_num ~ . - recent_nicotine_use,  
+  data = train,
+  distribution = "bernoulli",
+  n.trees = 1000,
+  shrinkage = 0.01
+)
+summary(boost_model)
+```
+Age seems to be the most important predictor
+
+j.
+```{r}
+rf <- randomForest(recent_nicotine_use ~ .,
+                       data = train,
+                       importance = TRUE)
+rf
+rf$err.rate[nrow(rf$err.rate), "OOB"]
+rf$mtry
+rf$ntree
+varImpPlot(rf)
+```
+Yes, the order of importance is similar, but they're not the same.
+
+k.
+```{r}
+boost_prob <- predict(boost_model, newdata = test, n.trees = 1000, type = "response")
+boost_pred <- ifelse(boost_prob >= 0.20, "Yes", "No")
+boost_pred <- factor(boost_pred, levels = c("No", "Yes"))
+rf_prob <- predict(rf, newdata = test, type = "prob")[, "Yes"]
+rf_pred <- ifelse(rf_prob >= 0.20, "Yes", "No")
+rf_pred <- factor(rf_pred, levels = c("No", "Yes"))
+boost_conf <- table(True = test$recent_nicotine_use, Pred = boost_pred)
+rf_conf    <- table(True = test$recent_nicotine_use, Pred = rf_pred)
+boost_conf
+rf_conf
+sum(test$recent_nicotine_use[rf_pred == "Yes"] == "Yes") / sum(rf_pred == "Yes")
+```

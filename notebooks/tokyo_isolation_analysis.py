@@ -112,6 +112,16 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown]
+### 3. Interpretation of Correlation Structure
+#The correlation matrix reveals a clear and interpretable structure among isolation-related features.
+#Demographic pressures—aging, single-living, and poverty—are tightly interlinked, consistent with 
+#Tokyo’s well-documented patterns of social vulnerability. Accessibility and station density behave as 
+#distinct spatial components, capturing infrastructural differences rather than demographic conditions. 
+#The strong alignment between the Designed Isolation Index (D-IRI) and the PCA-based index suggests 
+#that the conceptual model successfully captures the dominant underlying structure in the data.
+
+
+# %% [markdown]
 # ## 4. Designed vs PCA Isolation Index
 #
 # We expect strong agreement if the designed index aligns well with the
@@ -131,6 +141,15 @@ plt.show()
 
 print("Correlation between D-IRI and PCA index:")
 display(df[["iri_designed", "iri_pca"]].corr())
+
+# %% [markdown]
+### 4. Interpretation of D-IRI vs PCA Index Relationship
+#The near-linear relationship between the Designed Isolation Index and the PCA-derived isolation 
+#factor demonstrates strong convergent validity. Despite being created from different modeling 
+#philosophies—one theory-driven, one data-driven—both indices yield consistent ward-level patterns. 
+#This agreement provides strong evidence that the core dimensions of isolation risk are being 
+#systematically captured, independent of modeling choice.
+
 
 # %% [markdown]
 # ## 5. Join with ward geometries
@@ -319,6 +338,14 @@ axes[2].set_ylabel("D-IRI")
 plt.tight_layout()
 plt.show()
 
+# %% [markdown]
+### 11. Interpretation of Predictor Scatter Plots
+#The scatter plots show clear monotonic relationships between D-IRI and its core demographic features. 
+#Higher proportions of older adults, single-living residents, and households in poverty are associated 
+#with higher isolation scores. These relationships provide face validity for the index, demonstrating 
+#that its behavior aligns with established theoretical expectations regarding social isolation in 
+#urban contexts.
+
 
 # %% [markdown]
 ### 12. Reliability Check — Cronbach’s Alpha
@@ -417,6 +444,15 @@ for feature in base_weights.keys():
 
 sensitivity_df = pd.DataFrame(results)
 display(sensitivity_df)
+
+# %% [markdown]
+### 13. Interpretation of Weight Sensitivity Analysis
+#The robustness check shows that perturbing any feature’s weight by ±20% produces minimal changes in 
+#ward rankings (rank-correlation consistently ≥ 0.98). This indicates that the index is highly stable 
+#and not overly sensitive to subjective weighting decisions, strengthening confidence in its reliability 
+#for comparative spatial analysis.
+
+
 # %% [markdown]
 ### 14. Spatial Autocorrelation — Global Moran's I
 # Tests whether isolation index values are spatially clustered.
@@ -457,6 +493,13 @@ y = gdf["iri_designed"].values
 mi = Moran(y, w)
 print("Global Moran’s I:", round(mi.I, 4))
 print("p-value:", round(mi.p_sim, 4))
+# %% [markdown]
+### 14. Interpretation of Global Moran’s I
+#The Global Moran’s I statistic (I ≈ 0.307, p ≈ 0.006) demonstrates statistically significant spatial 
+#clustering of isolation risk across Tokyo’s 23 wards. Rather than being randomly distributed, 
+#high- and low-isolation areas tend to cluster geographically. This confirms that social isolation risk 
+#is shaped by spatial context and that the index captures meaningful geographic patterns rather than 
+#random variation.
 
 # %% [markdown]
 ### 15. PCA Factor Loadings (Interpretability Check)
@@ -477,4 +520,38 @@ pca.fit(X_scaled)
 loadings = pd.Series(pca.components_[0], index=X.columns)
 display(loadings.to_frame("PCA Loading"))
 
-# %%
+
+# %% [markdown]
+## Limitations and Future Work
+
+#While the Tokyo Isolation Index provides a robust foundation for understanding spatial patterns of 
+#isolation risk, several limitations suggest opportunities for advancement:
+
+#**1. Limited dimensionality of available indicators.**  
+#The analysis relies heavily on demographic and socioeconomic variables. Future iterations could benefit 
+#from incorporating additional dimensions such as disability status, caregiver availability, neighborhood 
+#land-use diversity, or subjective well-being indicators if accessible through Japanese survey data.
+
+#**2. Station density as a coarse mobility proxy.**  
+#Rail station density captures transit accessibility only indirectly. Incorporating train frequency, 
+#bus routes, travel-time surfaces, or multimodal network accessibility could significantly refine the 
+#mobility/access dimension.
+
+#**3. Static snapshot of a dynamic urban process.**  
+#The current pipeline uses 2020 census data. Recomputing the index using multiple census years—or 
+#synthetic population projections—would enable longitudinal analysis of isolation trends.
+
+#**4. Tokyo-only validation.**  
+#Although the index performs well for Tokyo, generalizability has not yet been demonstrated.  
+#The next major step is **replicating the full pipeline for Osaka**, which will allow:
+
+#- external geographic validation,  
+#- comparison of isolation profiles across major metropolitan regions,  
+#- identification of structural similarities or differences between eastern and western Japan,  
+#- testing whether the index’s statistical properties hold across distinct urban contexts.
+
+#Building a parallel Osaka Isolation Index (O-IRI) will also enable future cross-city clustering, 
+#regional PCA, or nationwide generalization of isolation risk modeling—aligning the project more closely 
+#with the goals of quantitative social science and spatial data analysis programs in Japan.
+
+

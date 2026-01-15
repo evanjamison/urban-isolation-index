@@ -1,5 +1,6 @@
 ﻿# src/app/main.py
 from __future__ import annotations
+import numpy as np
 
 import json
 import textwrap
@@ -141,10 +142,13 @@ def render_hover_map(
     df: pd.DataFrame,
     value_col: str,
     title: str,
+    color_scale: str = "Viridis",
+    diverging_midpoint: float | None = None,
+    symmetric_range: bool = False,
 ) -> None:
     """
     Interactive hover choropleth using Plotly + GeoJSON.
-    Works with Shapely 1.x or 2.x (no shapely.make_valid dependency).
+    Uses join_key='N03_007' (Tokyo ward JIS code in your GeoJSON).
     """
     if not _HAS_PLOTLY:
         st.info("Interactive hover maps require Plotly. Install it with: `pip install plotly`.")
@@ -153,13 +157,12 @@ def render_hover_map(
     import geopandas as gpd
 
     # Shapely compatibility:
-    # - Shapely 1.8+: shapely.validation.make_valid
-    # - else fallback: buffer(0)
     try:
         from shapely.validation import make_valid as _make_valid  # shapely 1.8+
     except Exception:
         _make_valid = None
 
+    # ✅ KEEP your working join key
     join_key = "N03_007"
 
     if "ward_jis" not in df.columns:
@@ -222,7 +225,7 @@ def render_hover_map(
         st.error("No Polygon/MultiPolygon geometries left after filtering.")
         return
 
-    # Fix invalid geometries (Plotly can silently fail)
+    # Fix invalid geometries
     if _make_valid is not None:
         try:
             gdf["geometry"] = gdf["geometry"].apply(_make_valid)
@@ -231,7 +234,6 @@ def render_hover_map(
     else:
         gdf["geometry"] = gdf["geometry"].buffer(0)
 
-    # If anything is still invalid, buffer(0) again
     try:
         bad = (~gdf.is_valid).sum()
         if bad:
@@ -239,8 +241,18 @@ def render_hover_map(
     except Exception:
         pass
 
-    # Convert cleaned gdf to GeoJSON dict
     gj = json.loads(gdf.to_json())
+
+    # -------------------
+    # Optional symmetric range for difference maps
+    # -------------------
+    range_color = None
+    if symmetric_range:
+        vals = d[value_col].to_numpy()
+        vmax = float(np.nanmax(np.abs(vals))) if np.isfinite(np.nanmax(np.abs(vals))) else 1.0
+        if vmax == 0:
+            vmax = 1.0
+        range_color = (-vmax, vmax)
 
     # -------------------
     # Plotly choropleth
@@ -253,11 +265,12 @@ def render_hover_map(
         color=value_col,
         hover_name="_ward_display",
         hover_data={value_col: ":.3f"},
-        color_continuous_scale="Viridis",
+        color_continuous_scale=color_scale,
+        range_color=range_color,
+        color_continuous_midpoint=diverging_midpoint,
         title=title,
     )
 
-    # Stable Tokyo view
     fig.update_geos(
         visible=False,
         projection_type="mercator",
@@ -268,6 +281,126 @@ def render_hover_map(
 
     fig.update_layout(margin=dict(l=0, r=0, t=60, b=0))
     st.plotly_chart(fig, use_container_width=True)
+
+
+def render_ml_notes() -> None:
+    """Reusable ML notes block (used in top-level narrative + ML tab)."""
+    with st.expander("🧠 Machine Learning: model notation & interpretation", expanded=False):
+        st.markdown("### What the ML model is doing (high level)")
+        st.markdown(
+            """
+The machine learning component is an **Elastic Net logistic regression** trained to predict a **binary high-risk label**:
+
+where $y_i = 1$ means ward $i$ is classified as **high isolation risk** under the **Designed Isolation Index (D-IRI)**.
+
+> **Key point:** ML is **not redefining isolation**.  
+> It’s testing which indicators best reproduce the structural high-risk classification **out-of-sample**.
+"""
+        )
+        st.latex(r"y_i \in \{0,1\}")
+
+        st.markdown("---")
+        st.markdown("### Model form")
+        st.latex(r"\Pr(y_i = 1) = \sigma\left(\beta_0 + \sum_{k=1}^{p} \beta_k x_{ik}\right)")
+
+        st.markdown(
+            """
+- $x_{ik}$: predictors for ward $i$ (typically standardized)
+- $\beta_k$: learned coefficients
+- $\sigma(\cdot)$: logistic sigmoid
+"""
+        )
+
+        st.markdown("Elastic Net regularization combines:")
+        st.markdown("- **L1 (lasso)** → feature selection (many coefficients become 0)")
+        st.markdown("- **L2 (ridge)** → stability (shrinks coefficients smoothly)")
+
+        st.markdown("Objective (cross-entropy + Elastic Net penalty):")
+        st.latex(
+            r"""
+\mathcal{L}(\beta) =
+-\sum_{i=1}^{n}\Big[y_i\log(\hat p_i)+(1-y_i)\log(1-\hat p_i)\Big]
++ \lambda\Big(\alpha\lVert\beta\rVert_1 + (1-\alpha)\lVert\beta\rVert_2^2\Big)
+"""
+        )
+        st.markdown(
+            """
+- $\lambda$: overall shrinkage strength  
+- $\alpha$: mix between L1 and L2  
+"""
+        )
+
+        st.markdown("---")
+        st.markdown("### Validation: LOOCV (Leave-One-Out CV)")
+        st.markdown(
+            """
+Because $n=23$ wards is small, you used **LOOCV**:
+
+For each ward $i$:
+1. Train on the other $n-1$ wards  
+2. Predict on the held-out ward $i$  
+3. Repeat for all wards  
+
+This gives **out-of-sample predictions for every ward** (no leakage).
+"""
+        )
+
+        st.markdown("---")
+        st.markdown("### Why z-scoring is appropriate here")
+        st.markdown("Predictors are standardized as:")
+        st.latex(r"z = \frac{x - \mu}{\sigma}")
+
+        st.markdown(
+            """
+This is appropriate because:
+
+- Regularization depends on coefficient scale → standardization makes penalties fair across variables  
+- Coefficients become comparable: a 1-unit change means **1 SD within Tokyo**  
+- Prevents “big-unit” variables (e.g., population) from dominating purely due to scale  
+
+It **does not erase meaning** — it changes interpretation to *relative within Tokyo*.
+"""
+        )
+
+        st.markdown("---")
+        st.markdown("## How to read the ML maps")
+
+        st.markdown("### Structural z map")
+        st.markdown("A standardized version of the designed structural index:")
+        st.latex(r"z(\mathrm{D\text{-}IRI}_i)")
+
+        st.markdown("### ML z map")
+        st.markdown("A standardized version of the ML risk signal (probability/score then standardized):")
+        st.latex(r"z(\mathrm{ML}_i)")
+
+        st.markdown("### Difference map (core diagnostic)")
+        st.latex(r"\mathrm{Diff}_i = z(\mathrm{ML}_i) - z(\mathrm{D\text{-}IRI}_i)")
+
+        st.markdown(
+            """
+- **Diff > 0:** ML flags higher risk than the structural index  
+- **Diff < 0:** Structural index flags higher risk than ML  
+- **Diff ≈ 0:** Agreement  
+"""
+        )
+
+        st.markdown("---")
+        st.markdown("### Why density / overall single-households may look weak")
+        st.markdown(
+            """
+Population density and overall single-person households can be:
+
+- low-variance across Tokyo wards (hard to discriminate)
+- indirect correlates rather than direct mechanisms
+- consistent with the idea that **physical proximity ≠ social integration**
+
+Often the model prefers **age-conditioned household structure** (e.g., *elderly living alone*) over “living alone overall”.
+"""
+        )
+
+        st.markdown("---")
+        st.markdown("### Key takeaway")
+        st.markdown("🧮 **D-IRI encodes theory**  \n🤖 **ML tests empirical consistency out-of-sample**  \nTheir contrast is the **result**, not a contradiction.")
 
 
 # -----------------------------
@@ -316,6 +449,28 @@ diff_img = find_first(
     search_roots=search_roots,
 )
 
+# -----------------------------
+# ML spatial PNGs (ML LISA + ML−Structural Diff LISA)
+# -----------------------------
+ml_lisa_img = find_first(
+    patterns=[
+        "tokyo_ml_lisa_clusters.png",
+        "*ml*lisa*cluster*.png",
+        "*tokyo*ml*lisa*.png",
+    ],
+    search_roots=search_roots,
+)
+
+ml_diff_lisa_img = find_first(
+    patterns=[
+        "tokyo_diff_lisa_clusters.png",
+        "*diff*lisa*cluster*.png",
+        "*ml*structural*difference*lisa*.png",
+        "*ml*minus*structural*lisa*.png",
+    ],
+    search_roots=search_roots,
+)
+
 # CSVs
 designed_csv = find_first(
     patterns=[
@@ -331,6 +486,16 @@ pca_csv = find_first(
         "jp_tokyo_with_designed_pca.csv",
         "*tokyo*designed*pca*.csv",
         "*tokyo*pca*.csv",
+    ],
+    search_roots=search_roots,
+)
+
+# ML difference map CSV (produced by ml/scripts/06_make_difference_map.py)
+ml_diff_csv = find_first(
+    patterns=[
+        "difference_map_data.csv",
+        "*difference*map*data*.csv",
+        "*ml*maps*difference*.csv",
     ],
     search_roots=search_roots,
 )
@@ -377,7 +542,10 @@ st.sidebar.write("PCA CSV:", str(pca_csv) if pca_csv else "❌ not found")
 st.sidebar.write("PCA map (PNG fallback):", str(pca_img) if pca_img else "❌ not found")
 st.sidebar.write("LISA map (PNG fallback):", str(lisa_img) if lisa_img else "❌ not found")
 st.sidebar.write("Difference map (PNG fallback):", str(diff_img) if diff_img else "❌ not found")
+st.sidebar.write("ML LISA map (PNG):", str(ml_lisa_img) if ml_lisa_img else "❌ not found")
+st.sidebar.write("ML−Structural LISA map (PNG):", str(ml_diff_lisa_img) if ml_diff_lisa_img else "❌ not found")
 st.sidebar.write("LISA results CSV:", str(lisa_csv) if lisa_csv else "❌ not found")
+st.sidebar.write("ML difference CSV:", str(ml_diff_csv) if ml_diff_csv else "❌ not found")
 
 if use_hover and not _HAS_PLOTLY:
     st.sidebar.warning("Plotly not installed. Run: `pip install plotly`")
@@ -525,6 +693,9 @@ Agreement increases confidence; divergence signals areas for deeper investigatio
 """
     )
 
+# ✅ NEW: ML notes placed in the main narrative (always visible without needing the ML tab)
+render_ml_notes()
+
 with st.expander("🌍 Real-World Significance"):
     st.markdown(
         """
@@ -579,9 +750,11 @@ with st.expander("What these maps show (plain-language explanation)", expanded=F
     )
 
 # -----------------------------
-# Tabs: Designed vs PCA
+# Tabs: Designed vs PCA vs ML vs Spatial
 # -----------------------------
-tab_designed, tab_pca, tab_spatial = st.tabs(["Designed index (D-IRI)", "PCA index", "Spatial analysis"])
+tab_designed, tab_pca, tab_ml, tab_spatial = st.tabs(
+    ["Designed index (D-IRI)", "PCA index", "ML maps (risk + difference)", "Spatial analysis"]
+)
 
 
 def render_index_tab(
@@ -685,18 +858,104 @@ with tab_pca:
         png_fallback=pca_img,
     )
 
-with st.expander("What these spatial maps mean (definitions + why it matters)", expanded=True):
-    st.markdown("### Why spatial statistics?")
-    st.markdown(
-        "Spatial autocorrelation asks whether **similar values occur near each other** more than expected by chance."
-    )
+with tab_ml:
+    st.subheader("ML risk + Difference (ML − Structural)")
 
-    st.markdown("---")
-    st.markdown("## 1) Global Moran’s I (overall clustering)")
+    if not (ml_diff_csv and ml_diff_csv.exists()):
+        st.warning(
+            "ML difference CSV not found. Run:\n"
+            "  python ml/scripts/06_make_difference_map.py\n"
+            "Then refresh this page."
+        )
+    else:
+        dfm = safe_read_csv(ml_diff_csv)
 
-    st.markdown("**Definitions**")
-    st.markdown(
-        """
+        if "ward_jis" not in dfm.columns:
+            st.error("Expected `ward_jis` column in ML difference CSV.")
+        else:
+            # Ensure numeric where present
+            for c in ["iri_designed_z", "iri_ml_z", "iri_diff", "iri_designed", "iri_ml_score"]:
+                if c in dfm.columns:
+                    dfm[c] = coerce_numeric(dfm[c])
+
+            t1, t2, t3 = st.tabs(["Structural z", "ML z", "Difference (ML − Structural)"])
+
+            if use_hover and wards_geojson and wards_geojson.exists():
+                with t1:
+                    render_hover_map(
+                        wards_geojson_path=wards_geojson,
+                        df=dfm,
+                        value_col="iri_designed_z",
+                        title="Structural isolation risk (z-score)",
+                        color_scale="Viridis",
+                    )
+                with t2:
+                    render_hover_map(
+                        wards_geojson_path=wards_geojson,
+                        df=dfm,
+                        value_col="iri_ml_z",
+                        title="ML isolation risk (z-score)",
+                        color_scale="Viridis",
+                    )
+                with t3:
+                    render_hover_map(
+                        wards_geojson_path=wards_geojson,
+                        df=dfm,
+                        value_col="iri_diff",
+                        title="Difference in isolation risk (ML − Structural)",
+                        color_scale="RdBu_r",
+                        diverging_midpoint=0.0,
+                        symmetric_range=True,
+                    )
+                    st.caption(
+                        "Red = ML flags higher risk than the structural index; "
+                        "Blue = structural index flags higher risk than ML; White ≈ agreement."
+                    )
+            else:
+                st.info("Enable the interactive hover map toggle (and ensure GeoJSON is detected) to render these maps.")
+
+            st.markdown("---")
+            st.markdown("## Biggest disagreements (auto-annotated)")
+
+            label_col = infer_ward_col(dfm)
+            if label_col not in dfm.columns:
+                label_col = "ward_jis"
+
+            top_ml = dfm.sort_values("iri_diff", ascending=False).head(3)
+            top_struct = dfm.sort_values("iri_diff", ascending=True).head(3)
+
+            c1, c2 = st.columns(2)
+            with c1:
+                st.markdown("### ML >> Structural (positive difference)")
+                st.dataframe(
+                    top_ml[[label_col, "ward_jis", "iri_diff", "iri_ml_score", "iri_designed"]],
+                    use_container_width=True,
+                )
+
+            with c2:
+                st.markdown("### Structural >> ML (negative difference)")
+                st.dataframe(
+                    top_struct[[label_col, "ward_jis", "iri_diff", "iri_ml_score", "iri_designed"]],
+                    use_container_width=True,
+                )
+
+    # ✅ Also include notes inside the ML tab (so viewers see it in-context)
+    render_ml_notes()
+
+
+with tab_spatial:
+    with st.expander("What these spatial maps mean (definitions + why it matters)", expanded=True):
+        st.markdown("### Why spatial statistics?")
+        st.markdown(
+            "Spatial autocorrelation asks whether **similar values occur near each other** more than expected by chance."
+        )
+
+        st.markdown("---")
+        st.markdown("## 1) Global Moran’s I (overall clustering)")
+
+        st.markdown("**Definitions**")
+        st.markdown(
+            """
 - **yᵢ**: index value in ward *i*  
 - **ȳ**: mean index value across wards  
 - **s**: standard deviation across wards  
@@ -704,43 +963,45 @@ with st.expander("What these spatial maps mean (definitions + why it matters)", 
 - **wᵢⱼ**: spatial weight between wards *i* and *j* (e.g., 1 if they share a border, else 0)  
 - **n**: number of wards  
 """
-    )
+        )
 
-    st.markdown("A common form of **Global Moran’s I** is:")
-    st.latex(r"""
+        st.markdown("A common form of **Global Moran’s I** is:")
+        st.latex(
+            r"""
 I = \frac{n}{\sum_{i}\sum_{j} w_{ij}}
 \cdot
 \frac{\sum_{i}\sum_{j} w_{ij} (y_i - \bar{y})(y_j - \bar{y})}
 {\sum_{i} (y_i - \bar{y})^2}
-""")
+"""
+        )
 
-    st.markdown("Equivalently, in z-score form:")
-    st.latex(r"""
+        st.markdown("Equivalently, in z-score form:")
+        st.latex(
+            r"""
 I = \frac{n}{\sum_{i}\sum_{j} w_{ij}}
 \cdot
 \frac{\sum_{i}\sum_{j} w_{ij} z_i z_j}
 {\sum_{i} z_i^2}
-""")
+"""
+        )
 
-    st.markdown(
-        """
+        st.markdown(
+            """
 **Interpretation**
 - **I > 0**: similar values cluster together (high with high, low with low)  
 - **I ≈ 0**: pattern resembles random spatial arrangement  
 - **I < 0**: neighbors tend to be dissimilar (checkerboard pattern)  
 """
-    )
+        )
 
-    st.markdown("---")
-    st.markdown("## 2) Local Moran’s I (LISA: where clustering occurs)")
+        st.markdown("---")
+        st.markdown("## 2) Local Moran’s I (LISA: where clustering occurs)")
 
-    st.markdown("A common local statistic is:")
-    st.latex(r"""
-I_i = z_i \sum_{j} w_{ij} z_j
-""")
+        st.markdown("A common local statistic is:")
+        st.latex(r""" I_i = z_i \sum_{j} w_{ij} z_j """)
 
-    st.markdown(
-        """
+        st.markdown(
+            """
 Local Moran’s I identifies *where* clustering/outliers occur.
 Significance is usually assessed by permutation tests (p-values).
 
@@ -751,39 +1012,109 @@ Significance is usually assessed by permutation tests (p-values).
 - **Low–High (LH):** low ward surrounded by high neighbors (outlier)  
 - **Not significant:** no strong evidence of local clustering/outlier behavior  
 """
-    )
+        )
 
-    st.markdown("---")
-    st.markdown("## 3) D-IRI minus PCA (where theory vs data disagree)")
-    st.latex(r"""
-\Delta_i = \mathrm{D\text{-}IRI}_i - \mathrm{PCA}_i
-""")
-    st.markdown(
-        """
+        st.markdown("---")
+        st.markdown("## 3) D-IRI minus PCA (where theory vs data disagree)")
+        st.latex(r""" \Delta_i = \mathrm{D\text{-}IRI}_i - \mathrm{PCA}_i """)
+
+        st.markdown(
+            """
 - **Δ > 0:** Designed index rates the ward higher than PCA  
 - **Δ < 0:** PCA rates the ward higher than Designed index  
 """
-    )
-
-    # --- spatial tabs ---
-    spatial_lisa_tab, spatial_diff_tab = st.tabs(["LISA cluster map", "D-IRI minus PCA"])
-
-    with spatial_lisa_tab:
-        st.markdown("### Tokyo Designed Isolation Index (D-IRI) — LISA Cluster Map")
-        render_spatial_map_block(
-            title="Tokyo D-IRI LISA cluster map",
-            png_path=lisa_img,
-            table_csv=lisa_csv,
-            table_title="LISA results (table)",
         )
 
-    with spatial_diff_tab:
-        st.markdown("### Tokyo: D-IRI minus PCA (difference map)")
-        render_spatial_map_block(
-            title="Tokyo D-IRI minus PCA",
-            png_path=diff_img,
-            table_csv=None,
-            table_title="Dataset (optional)",
+        # --- spatial tabs ---
+        spatial_lisa_tab, spatial_diff_tab, spatial_ml_tab = st.tabs(
+            ["LISA cluster map", "D-IRI minus PCA", "ML spatial diagnostics"]
         )
+
+        with spatial_lisa_tab:
+            st.markdown("### Tokyo Designed Isolation Index (D-IRI) — LISA Cluster Map")
+            render_spatial_map_block(
+                title="Tokyo D-IRI LISA cluster map",
+                png_path=lisa_img,
+                table_csv=lisa_csv,
+                table_title="LISA results (table)",
+            )
+
+        with spatial_diff_tab:
+            st.markdown("### Tokyo: D-IRI minus PCA (difference map)")
+            render_spatial_map_block(
+                title="Tokyo D-IRI minus PCA",
+                png_path=diff_img,
+                table_csv=None,
+                table_title="Dataset (optional)",
+            )
+
+        with spatial_ml_tab:
+            st.markdown("### ML Spatial Diagnostics (Local Moran’s I / LISA)")
+            st.caption(
+                "These maps replicate the same LISA cluster workflow, but computed on: "
+                "(1) ML isolation risk z-scores, and (2) the difference (ML − Structural)."
+            )
+
+            # Prefer expected output paths, otherwise fall back to detected locations.
+            spatial_ml_dir = ROOT / "out" / "spatial_ml"
+            ml_png_expected = spatial_ml_dir / "tokyo_ml_lisa_clusters.png"
+            diff_png_expected = spatial_ml_dir / "tokyo_diff_lisa_clusters.png"
+
+            ml_png = ml_png_expected if ml_png_expected.exists() else ml_lisa_img
+            diff_png = diff_png_expected if diff_png_expected.exists() else ml_diff_lisa_img
+
+            def _show_png_with_download(path: Path | None, caption: str):
+                if not (path and path.exists()):
+                    st.error("ML spatial PNG not found.")
+                    st.code(
+                        "Run (PowerShell):\n"
+                        ".\\.venv\\Scripts\\python.exe ml\\scripts\\ml_spatial.py `\n"
+                        "  --ml-path out\\ml\\maps\\difference_map_data.csv `\n"
+                        "  --wards-geojson data\\external\\jp_tokyo_wards.geojson `\n"
+                        "  --out-dir out\\spatial_ml\n"
+                        "\nThen refresh Streamlit."
+                    )
+                    return
+
+                st.image(str(path), use_container_width=True, caption=caption)
+
+                with open(path, "rb") as f:
+                    st.download_button(
+                        label=f"Download: {path.name}",
+                        data=f,
+                        file_name=path.name,
+                        mime="image/png",
+                        use_container_width=True,
+                    )
+
+            c1, c2 = st.columns(2, gap="large")
+            with c1:
+                st.markdown("#### ML isolation risk (z-score) — LISA")
+                _show_png_with_download(
+                    ml_png,
+                    caption="Local Moran’s I on ML z-scores. Red = High–High hotspots; gray = not significant.",
+                )
+
+            with c2:
+                st.markdown("#### (ML − Structural) difference — LISA")
+                _show_png_with_download(
+                    diff_png,
+                    caption="Local Moran’s I on (ML − Structural). If all gray, disagreements are not spatially clustered.",
+                )
+
+            with st.expander("How to interpret these (quick)", expanded=False):
+                st.markdown(
+                    """
+- **High–High (HH):** high value surrounded by high neighbors (hotspot cluster)
+- **Low–Low (LL):** low value surrounded by low neighbors (coldspot cluster)
+- **High–Low / Low–High:** spatial outliers (ward differs from neighbors)
+- **Not significant:** no strong evidence of local clustering/outlier behavior
+
+**For the difference map** where `diff = ML_z − Structural_z`:
+- **HH:** ML systematically higher than Structural in that region
+- **LL:** Structural systematically higher than ML in that region
+- **All gray:** disagreements are not spatially systematic (ward-specific)
+"""
+                )
 
 st.caption("Tip: regenerate CSVs/plots with your pipeline scripts, then refresh this page.")

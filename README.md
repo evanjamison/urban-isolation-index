@@ -1,6 +1,8 @@
 # 🏙️ Tokyo Urban Isolation Index  
 ### Social Isolation Risk Modeling for Tokyo’s 23 Wards
 
+https://toyko-urban-isolation-index.streamlit.app/
+
 This project develops a strong spacial social data science framework in order to quanify and vizualize the urban social isolation risk, specifically for older adults in Tokyo's 23 wards. This project uses the 2020 Population Census (e-Stat). Japan's rapid aging demographic, as well as the rise of single elderly households have made social isolation (社会的孤立) an important policy concern. This study applies rigorious spacial, computational, and statistical methods in order to examine how demographic, socioeconomic, and accessibility factors often interact to create isolation risk across different urban neighborhoods and living situations.
 
 # Executive Summary 

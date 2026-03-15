@@ -1,4 +1,4 @@
-﻿# src/app/main.py
+# src/app/main.py
 from __future__ import annotations
 import numpy as np
 
@@ -17,7 +17,6 @@ st.set_page_config(page_title="Urban Isolation Index — Tokyo", layout="wide")
 # Plotly is optional (we’ll degrade gracefully if missing)
 try:
     import plotly.express as px  # type: ignore
-
     _HAS_PLOTLY = True
 except Exception:
     _HAS_PLOTLY = False
@@ -96,6 +95,13 @@ def infer_ward_col(df: pd.DataFrame) -> str:
     return ward_candidates[0] if ward_candidates else df.columns[0]
 
 
+def pick_first_existing_col(df: pd.DataFrame, candidates: list[str]) -> str | None:
+    for c in candidates:
+        if c in df.columns:
+            return c
+    return None
+
+
 def add_rankings_block(df: pd.DataFrame, *, ward_col: str, score_col: str, n_show: int) -> None:
     """Render top/bottom rankings for the chosen ward + score columns."""
     d = df.copy()
@@ -133,6 +139,53 @@ def add_rankings_block(df: pd.DataFrame, *, ward_col: str, score_col: str, n_sho
         st.dataframe(top, use_container_width=True)
     with right:
         st.markdown(f"### Lowest risk (bottom {n_show})")
+        st.dataframe(bot, use_container_width=True)
+
+
+def add_rankings_block_custom(
+    df: pd.DataFrame,
+    *,
+    ward_col: str,
+    score_col: str,
+    n_show: int,
+    high_label: str = "Highest values",
+    low_label: str = "Lowest values",
+) -> None:
+    """Render top/bottom rankings with customizable labels."""
+    d = df.copy()
+
+    ward_series = d[ward_col].astype(str).str.strip()
+    d["_ward_display"] = ward_series.apply(
+        lambda k: f"{k} ({TOKYO_WARD_ROMAJI[k]})" if k in TOKYO_WARD_ROMAJI else k
+    )
+
+    d[score_col] = coerce_numeric(d[score_col])
+
+    st.markdown(f"**Ward column:** `{ward_col}`  \n**Index column:** `{score_col}`")
+
+    base = d.dropna(subset=[score_col]).copy()
+    if base.empty:
+        st.error(f"No usable numeric values found in `{score_col}`.")
+        st.write(d[[ward_col, score_col]].head(10))
+        return
+
+    top = (
+        base.sort_values(score_col, ascending=False)
+        .head(n_show)[["_ward_display", score_col]]
+        .reset_index(drop=True)
+    )
+    bot = (
+        base.sort_values(score_col, ascending=True)
+        .head(n_show)[["_ward_display", score_col]]
+        .reset_index(drop=True)
+    )
+
+    left, right = st.columns(2)
+    with left:
+        st.markdown(f"### {high_label}")
+        st.dataframe(top, use_container_width=True)
+    with right:
+        st.markdown(f"### {low_label}")
         st.dataframe(bot, use_container_width=True)
 
 
@@ -403,6 +456,105 @@ Often the model prefers **age-conditioned household structure** (e.g., *elderly 
         st.markdown("🧮 **D-IRI encodes theory**  \n🤖 **ML tests empirical consistency out-of-sample**  \nTheir contrast is the **result**, not a contradiction.")
 
 
+def render_sii_fcfi_notes() -> None:
+    """Explanatory notes for SII, FCFI, and the gap map."""
+    with st.expander("📘 Social Isolation Index (SII)", expanded=False):
+        st.markdown(
+            r"""
+### Definition
+The **Social Isolation Index (SII)** is a ward-level composite measure designed to capture
+**structural conditions that increase the likelihood of social disconnection among residents**.
+
+### Formula
+\[
+\mathrm{SII} =
+(\mathrm{Solo\ Household\ \%} \times 0.35)
++
+(\mathrm{Private\ Rental\ \%} \times 0.30)
++
+(\mathrm{Single\text{-}Parent\ Household\ \%} \times 0.15)
++
+(\mathrm{Commuter\ Outflow\ \%} \times 0.10)
++
+(\mathrm{Self\text{-}Inflicted\ Injury\ Calls/10k,\ normalized} \times 0.10)
+\]
+
+### Components
+- **Solo Household % (0.35)** — share of all private households consisting of a single person  
+- **Private Rental % (0.30)** — share of all dwellings that are privately rented  
+- **Single-Parent Household % (0.15)** — share of households headed by a lone father or lone mother with children  
+- **Commuter Outflow % of Residents (0.10)** — residents who commute out of the ward daily as a percentage of nighttime population  
+- **Self-Inflicted Injury Ambulance Calls per 10,000 Residents, normalized (0.10)** — outcome signal of acute distress
+
+### Interpretation
+- **Higher SII** = greater structural isolation risk relative to other wards
+- Scores are **relative within Tokyo**, not absolute risk thresholds
+"""
+        )
+
+    with st.expander("👨‍👩‍👧 Family & Child Friendliness Index (FCFI)", expanded=False):
+        st.markdown(
+            r"""
+### Definition
+The **Family and Child Friendliness Index (FCFI)** is a ward-level composite measure
+designed to capture how well a ward’s demographic composition, green space,
+civic infrastructure, and public safety environment support families with children.
+
+### Formula
+\[
+\mathrm{FCFI} =
+(\mathrm{Married\text{-}with\text{-}Children\ Household\ \%} \times 0.25)
++
+(\mathrm{Average\ Household\ Size,\ normalized} \times 0.15)
++
+(\mathrm{Park\ Area\ per\ Resident,\ normalized} \times 0.15)
++
+(\mathrm{Community\ Education\ Programs/10k,\ normalized} \times 0.10)
++
+(\mathrm{Library\ Loans\ per\ Resident,\ normalized} \times 0.10)
+-
+(\mathrm{Assault\ Ambulance\ Calls/10k,\ normalized} \times 0.05)
+\]
+
+### Components
+- **Married-with-Children Household % (0.25)** — direct demographic signal of family composition  
+- **Average Household Size, normalized (0.15)** — proxy for multi-person/family households  
+- **Park Area per Resident, normalized (0.15)** — child-accessible outdoor infrastructure  
+- **Community Education Programs per 10,000 Residents, normalized (0.10)** — structured civic activity accessible to families  
+- **Library Loans per Resident, normalized (0.10)** — proxy for civic and cultural infrastructure  
+- **Assault Ambulance Calls per 10,000 Residents, normalized (−0.05)** — negative public safety component
+
+### Methodological note
+**Chiyoda** scores anomalously high on FCFI largely because of its unusually high
+park area per resident relative to its small residential population.
+Interpret that score with caution.
+
+### Interpretation
+- **Higher FCFI** = more family- and child-friendly relative to other wards
+- Scores are **relative within Tokyo**, not subjective liveability ratings
+"""
+        )
+
+    with st.expander("🧭 SII − FCFI Gap Map", expanded=False):
+        st.markdown(
+            r"""
+### Definition
+The gap map compares standardized isolation pressure against standardized family-friendliness:
+
+\[
+\mathrm{Gap}_i = z(\mathrm{SII}_i) - z(\mathrm{FCFI}_i)
+\]
+
+### Interpretation
+- **Positive / red** = isolation is higher relative to family support
+- **Negative / blue** = family-friendliness is stronger relative to isolation
+- **Near zero / white** = relatively balanced
+
+This is useful for highlighting wards where social isolation pressures and family-supportive infrastructure diverge.
+"""
+        )
+
+
 # -----------------------------
 # Locate outputs
 # -----------------------------
@@ -521,6 +673,59 @@ wards_geojson = find_first(
 )
 
 # -----------------------------
+# SII / FCFI / GAP CSVs + PNGs
+# -----------------------------
+sii_csv = find_first(
+    patterns=[
+        "tokyo_sii.csv",
+        "*sii*.csv",
+    ],
+    search_roots=search_roots,
+)
+
+fcfi_csv = find_first(
+    patterns=[
+        "tokyo_fcfi.csv",
+        "*fcfi*.csv",
+    ],
+    search_roots=search_roots,
+)
+
+sii_fcfi_gap_csv = find_first(
+    patterns=[
+        "tokyo_sii_fcfi_gap.csv",
+        "*sii*fcfi*gap*.csv",
+        "*gap*.csv",
+    ],
+    search_roots=search_roots,
+)
+
+sii_img = find_first(
+    patterns=[
+        "tokyo_sii_map.png",
+        "*sii*map*.png",
+    ],
+    search_roots=search_roots,
+)
+
+fcfi_img = find_first(
+    patterns=[
+        "tokyo_fcfi_map.png",
+        "*fcfi*map*.png",
+    ],
+    search_roots=search_roots,
+)
+
+sii_fcfi_gap_img = find_first(
+    patterns=[
+        "tokyo_sii_fcfi_gap_map.png",
+        "*sii*fcfi*gap*map*.png",
+        "*gap*map*.png",
+    ],
+    search_roots=search_roots,
+)
+
+# -----------------------------
 # Sidebar controls
 # -----------------------------
 st.sidebar.header("Tokyo viewer")
@@ -546,6 +751,12 @@ st.sidebar.write("ML LISA map (PNG):", str(ml_lisa_img) if ml_lisa_img else "❌
 st.sidebar.write("ML−Structural LISA map (PNG):", str(ml_diff_lisa_img) if ml_diff_lisa_img else "❌ not found")
 st.sidebar.write("LISA results CSV:", str(lisa_csv) if lisa_csv else "❌ not found")
 st.sidebar.write("ML difference CSV:", str(ml_diff_csv) if ml_diff_csv else "❌ not found")
+st.sidebar.write("SII CSV:", str(sii_csv) if sii_csv else "❌ not found")
+st.sidebar.write("FCFI CSV:", str(fcfi_csv) if fcfi_csv else "❌ not found")
+st.sidebar.write("SII−FCFI gap CSV:", str(sii_fcfi_gap_csv) if sii_fcfi_gap_csv else "❌ not found")
+st.sidebar.write("SII map (PNG):", str(sii_img) if sii_img else "❌ not found")
+st.sidebar.write("FCFI map (PNG):", str(fcfi_img) if fcfi_img else "❌ not found")
+st.sidebar.write("SII−FCFI gap map (PNG):", str(sii_fcfi_gap_img) if sii_fcfi_gap_img else "❌ not found")
 
 if use_hover and not _HAS_PLOTLY:
     st.sidebar.warning("Plotly not installed. Run: `pip install plotly`")
@@ -693,7 +904,7 @@ Agreement increases confidence; divergence signals areas for deeper investigatio
 """
     )
 
-# ✅ NEW: ML notes placed in the main narrative (always visible without needing the ML tab)
+# ML notes in main narrative
 render_ml_notes()
 
 with st.expander("🌍 Real-World Significance"):
@@ -729,9 +940,6 @@ isolation risk across Tokyo’s wards.
 """
     )
 
-# -----------------------------
-# Intro (short, optional)
-# -----------------------------
 with st.expander("What these maps show (plain-language explanation)", expanded=False):
     st.markdown(
         textwrap.dedent(
@@ -750,10 +958,16 @@ with st.expander("What these maps show (plain-language explanation)", expanded=F
     )
 
 # -----------------------------
-# Tabs: Designed vs PCA vs ML vs Spatial
+# Tabs
 # -----------------------------
-tab_designed, tab_pca, tab_ml, tab_spatial = st.tabs(
-    ["Designed index (D-IRI)", "PCA index", "ML maps (risk + difference)", "Spatial analysis"]
+tab_designed, tab_pca, tab_context, tab_ml, tab_spatial = st.tabs(
+    [
+        "Designed index (D-IRI)",
+        "PCA index",
+        "Isolation & Family Context",
+        "ML maps (risk + difference)",
+        "Spatial analysis",
+    ]
 )
 
 
@@ -774,7 +988,6 @@ def render_index_tab(
         if csv_path and csv_path.exists():
             df = safe_read_csv(csv_path)
 
-            # Prefer hover map if enabled and GeoJSON exists
             if use_hover and wards_geojson and wards_geojson.exists():
                 value_col = score_col_preferred if score_col_preferred in df.columns else df.columns[-1]
                 render_hover_map(
@@ -784,13 +997,11 @@ def render_index_tab(
                     title=title,
                 )
             else:
-                # PNG fallback
                 if png_fallback and png_fallback.exists():
                     st.image(str(png_fallback), use_container_width=True)
                 else:
                     st.warning("No hover map (missing GeoJSON / Plotly) and no PNG fallback found.")
         else:
-            # no CSV -> just show PNG fallback if present
             if png_fallback and png_fallback.exists():
                 st.image(str(png_fallback), use_container_width=True)
             else:
@@ -858,6 +1069,179 @@ with tab_pca:
         png_fallback=pca_img,
     )
 
+with tab_context:
+    st.subheader("Isolation & Family Context")
+
+    st.markdown(
+        """
+These exploratory indices add demographic and infrastructural context to the main isolation analysis.
+
+- **SII** = Social Isolation Index
+- **FCFI** = Family & Child Friendliness Index
+- **Gap** = standardized difference between SII and FCFI
+"""
+    )
+
+    render_sii_fcfi_notes()
+
+    t1, t2, t3 = st.tabs(["SII", "FCFI", "Gap (SII − FCFI)"])
+
+    # -----------------------------
+    # SII
+    # -----------------------------
+    with t1:
+        c1, c2 = st.columns([1.35, 1])
+
+        with c1:
+            st.markdown("### Map")
+            if sii_csv and sii_csv.exists() and use_hover and wards_geojson and wards_geojson.exists():
+                df = safe_read_csv(sii_csv)
+                value_col = pick_first_existing_col(df, ["SII", "sii", "sii_score", "score"])
+                if value_col is None:
+                    st.error("Could not find an SII score column.")
+                else:
+                    render_hover_map(
+                        wards_geojson_path=wards_geojson,
+                        df=df,
+                        value_col=value_col,
+                        title="Tokyo Social Isolation Index (SII)",
+                        color_scale="PuRd",
+                    )
+            elif sii_img and sii_img.exists():
+                st.image(str(sii_img), use_container_width=True)
+            else:
+                st.error("SII map not found.")
+
+        with c2:
+            st.markdown("### Dataset (table)")
+            if sii_csv and sii_csv.exists():
+                df = safe_read_csv(sii_csv)
+                st.dataframe(df, use_container_width=True)
+            else:
+                st.error("SII CSV not found.")
+
+        if sii_csv and sii_csv.exists():
+            df = safe_read_csv(sii_csv)
+            ward_col = infer_ward_col(df)
+            score_col = pick_first_existing_col(df, ["SII", "sii", "sii_score", "score"])
+            if score_col is not None:
+                st.markdown("---")
+                st.markdown("## Rankings")
+                add_rankings_block_custom(
+                    df,
+                    ward_col=ward_col,
+                    score_col=score_col,
+                    n_show=n_show,
+                    high_label="Highest SII",
+                    low_label="Lowest SII",
+                )
+
+    # -----------------------------
+    # FCFI
+    # -----------------------------
+    with t2:
+        c1, c2 = st.columns([1.35, 1])
+
+        with c1:
+            st.markdown("### Map")
+            if fcfi_csv and fcfi_csv.exists() and use_hover and wards_geojson and wards_geojson.exists():
+                df = safe_read_csv(fcfi_csv)
+                value_col = pick_first_existing_col(df, ["FCFI", "fcfi", "fcfi_score", "score"])
+                if value_col is None:
+                    st.error("Could not find an FCFI score column.")
+                else:
+                    render_hover_map(
+                        wards_geojson_path=wards_geojson,
+                        df=df,
+                        value_col=value_col,
+                        title="Tokyo Family & Child Friendliness Index (FCFI)",
+                        color_scale="Greens",
+                    )
+            elif fcfi_img and fcfi_img.exists():
+                st.image(str(fcfi_img), use_container_width=True)
+            else:
+                st.error("FCFI map not found.")
+
+        with c2:
+            st.markdown("### Dataset (table)")
+            if fcfi_csv and fcfi_csv.exists():
+                df = safe_read_csv(fcfi_csv)
+                st.dataframe(df, use_container_width=True)
+            else:
+                st.error("FCFI CSV not found.")
+
+        if fcfi_csv and fcfi_csv.exists():
+            df = safe_read_csv(fcfi_csv)
+            ward_col = infer_ward_col(df)
+            score_col = pick_first_existing_col(df, ["FCFI", "fcfi", "fcfi_score", "score"])
+            if score_col is not None:
+                st.markdown("---")
+                st.markdown("## Rankings")
+                add_rankings_block_custom(
+                    df,
+                    ward_col=ward_col,
+                    score_col=score_col,
+                    n_show=n_show,
+                    high_label="Most family-friendly",
+                    low_label="Least family-friendly",
+                )
+
+    # -----------------------------
+    # GAP
+    # -----------------------------
+    with t3:
+        c1, c2 = st.columns([1.35, 1])
+
+        with c1:
+            st.markdown("### Map")
+            if sii_fcfi_gap_csv and sii_fcfi_gap_csv.exists() and use_hover and wards_geojson and wards_geojson.exists():
+                df = safe_read_csv(sii_fcfi_gap_csv)
+                value_col = pick_first_existing_col(df, ["sii_fcfi_gap", "gap", "sii_minus_fcfi"])
+                if value_col is None:
+                    st.error("Could not find a gap score column.")
+                else:
+                    render_hover_map(
+                        wards_geojson_path=wards_geojson,
+                        df=df,
+                        value_col=value_col,
+                        title="Tokyo Isolation vs Family-Friendliness Gap (SII − FCFI)",
+                        color_scale="RdBu_r",
+                        diverging_midpoint=0.0,
+                        symmetric_range=True,
+                    )
+                    st.caption(
+                        "Red = isolation higher relative to family support; "
+                        "Blue = family-friendliness stronger relative to isolation; White ≈ balanced."
+                    )
+            elif sii_fcfi_gap_img and sii_fcfi_gap_img.exists():
+                st.image(str(sii_fcfi_gap_img), use_container_width=True)
+            else:
+                st.error("SII−FCFI gap map not found.")
+
+        with c2:
+            st.markdown("### Dataset (table)")
+            if sii_fcfi_gap_csv and sii_fcfi_gap_csv.exists():
+                df = safe_read_csv(sii_fcfi_gap_csv)
+                st.dataframe(df, use_container_width=True)
+            else:
+                st.error("SII−FCFI gap CSV not found.")
+
+        if sii_fcfi_gap_csv and sii_fcfi_gap_csv.exists():
+            df = safe_read_csv(sii_fcfi_gap_csv)
+            ward_col = infer_ward_col(df)
+            score_col = pick_first_existing_col(df, ["sii_fcfi_gap", "gap", "sii_minus_fcfi"])
+            if score_col is not None:
+                st.markdown("---")
+                st.markdown("## Rankings")
+                add_rankings_block_custom(
+                    df,
+                    ward_col=ward_col,
+                    score_col=score_col,
+                    n_show=n_show,
+                    high_label="Largest positive gap",
+                    low_label="Largest negative gap",
+                )
+
 with tab_ml:
     st.subheader("ML risk + Difference (ML − Structural)")
 
@@ -873,7 +1257,6 @@ with tab_ml:
         if "ward_jis" not in dfm.columns:
             st.error("Expected `ward_jis` column in ML difference CSV.")
         else:
-            # Ensure numeric where present
             for c in ["iri_designed_z", "iri_ml_z", "iri_diff", "iri_designed", "iri_ml_score"]:
                 if c in dfm.columns:
                     dfm[c] = coerce_numeric(dfm[c])
@@ -939,7 +1322,6 @@ with tab_ml:
                     use_container_width=True,
                 )
 
-    # ✅ Also include notes inside the ML tab (so viewers see it in-context)
     render_ml_notes()
 
 
@@ -1025,7 +1407,6 @@ Significance is usually assessed by permutation tests (p-values).
 """
         )
 
-        # --- spatial tabs ---
         spatial_lisa_tab, spatial_diff_tab, spatial_ml_tab = st.tabs(
             ["LISA cluster map", "D-IRI minus PCA", "ML spatial diagnostics"]
         )
@@ -1055,7 +1436,6 @@ Significance is usually assessed by permutation tests (p-values).
                 "(1) ML isolation risk z-scores, and (2) the difference (ML − Structural)."
             )
 
-            # Prefer expected output paths, otherwise fall back to detected locations.
             spatial_ml_dir = ROOT / "out" / "spatial_ml"
             ml_png_expected = spatial_ml_dir / "tokyo_ml_lisa_clusters.png"
             diff_png_expected = spatial_ml_dir / "tokyo_diff_lisa_clusters.png"

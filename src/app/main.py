@@ -509,7 +509,6 @@ The **Family and Child Friendliness Index (FCFI)** is a ward-level composite mea
 designed to capture how well a ward’s demographic composition, green space,
 civic infrastructure, and public safety environment support families with children.
 
-### Formula
 """
         )
 

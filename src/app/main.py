@@ -466,18 +466,27 @@ The **Social Isolation Index (SII)** is a ward-level composite measure designed 
 **structural conditions that increase the likelihood of social disconnection among residents**.
 
 ### Formula
-\[
+"""
+        )
+
+        st.markdown("### Formula")
+        st.latex(
+            r"""
 \mathrm{SII} =
-(\mathrm{Solo\ Household\ \%} \times 0.35)
+( \mathrm{Solo\ Household\ \%} \times 0.35 )
 +
-(\mathrm{Private\ Rental\ \%} \times 0.30)
+( \mathrm{Private\ Rental\ \%} \times 0.30 )
 +
-(\mathrm{Single\text{-}Parent\ Household\ \%} \times 0.15)
+( \mathrm{Single\text{-}Parent\ Household\ \%} \times 0.15 )
 +
-(\mathrm{Commuter\ Outflow\ \%} \times 0.10)
+( \mathrm{Commuter\ Outflow\ \%} \times 0.10 )
 +
-(\mathrm{Self\text{-}Inflicted\ Injury\ Calls/10k,\ normalized} \times 0.10)
-\]
+( \mathrm{Self\text{-}Inflicted\ Injury\ Calls/10k,\ normalized} \times 0.10 )
+"""
+        )
+
+        st.markdown(
+            """
 
 ### Components
 - **Solo Household % (0.35)** — share of all private households consisting of a single person  
@@ -501,20 +510,29 @@ designed to capture how well a ward’s demographic composition, green space,
 civic infrastructure, and public safety environment support families with children.
 
 ### Formula
-\[
+"""
+        )
+
+        st.markdown("### Formula")
+        st.latex(
+            r"""
 \mathrm{FCFI} =
-(\mathrm{Married\text{-}with\text{-}Children\ Household\ \%} \times 0.25)
+( \mathrm{Married\text{-}with\text{-}Children\ Household\ \%} \times 0.25 )
 +
-(\mathrm{Average\ Household\ Size,\ normalized} \times 0.15)
+( \mathrm{Average\ Household\ Size,\ normalized} \times 0.15 )
 +
-(\mathrm{Park\ Area\ per\ Resident,\ normalized} \times 0.15)
+( \mathrm{Park\ Area\ per\ Resident,\ normalized} \times 0.15 )
 +
-(\mathrm{Community\ Education\ Programs/10k,\ normalized} \times 0.10)
+( \mathrm{Community\ Education\ Programs/10k,\ normalized} \times 0.10 )
 +
-(\mathrm{Library\ Loans\ per\ Resident,\ normalized} \times 0.10)
+( \mathrm{Library\ Loans\ per\ Resident,\ normalized} \times 0.10 )
 -
-(\mathrm{Assault\ Ambulance\ Calls/10k,\ normalized} \times 0.05)
-\]
+( \mathrm{Assault\ Ambulance\ Calls/10k,\ normalized} \times 0.05 )
+"""
+        )
+
+        st.markdown(
+            """
 
 ### Components
 - **Married-with-Children Household % (0.25)** — direct demographic signal of family composition  
@@ -539,11 +557,18 @@ Interpret that score with caution.
         st.markdown(
             r"""
 ### Definition
-The gap map compares standardized isolation pressure against standardized family-friendliness:
+"""
+        )
 
-\[
+        st.markdown("### Formula")
+        st.latex(
+            r"""
 \mathrm{Gap}_i = z(\mathrm{SII}_i) - z(\mathrm{FCFI}_i)
-\]
+"""
+        )
+
+        st.markdown(
+            """
 
 ### Interpretation
 - **Positive / red** = isolation is higher relative to family support

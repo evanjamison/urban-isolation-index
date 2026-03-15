@@ -1,0 +1,38 @@
+﻿年次,Year,原因,Cause,発生件数 Accidents total,死傷者数 Killed or injured／総数 Total,死傷者数 Killed or injured／死者 Killed,死傷者数 Killed or injured／重傷者 Serious injury,死傷者数 Killed or injured／軽傷者 Minor injury
+平成31・令和元,2019,総数,Total,30288,34713,118,1210,33385
+令和2,2020,総数,Total,25466,28857,128,1178,27551
+令和3,2021,総数,Total,27434,30796,103,1478,29215
+令和4,2022,総数,Total,29994,33366,107,1464,31795
+令和5,2023,総数,Total,31209,34821,120,1652,33049
+令和5,2023,信号無視,Ignoring traffic light signals,970,1143,13,140,990
+令和5,2023,通行区分違反,Lane violation,72,83,-,11,72
+令和5,2023,最高速度違反,Speed violation,12,13,3,5,5
+令和5,2023,横断等禁止違反,Crossing， etc. violation,63,74,3,28,43
+令和5,2023,車間距離不保持,Tailgating,70,89,-,-,89
+令和5,2023,進路変更禁止違反,Lane change violation ,104,116,3,42,71
+令和5,2023,通行妨害,Obstruction of traffic ,5,7,-,1,6
+令和5,2023,追越違反,Overtaking violation,37,40,1,9,30
+令和5,2023,右折違反,Right turn violation,29,34,-,8,26
+令和5,2023,左折違反,Left turn violation,22,26,-,3,23
+令和5,2023,優先通行妨害等,Obstruction of priority lanes， etc.,207,247,9,132,106
+令和5,2023,交差点安全進行義務違反,Violation of duty to use caution at intersections,3873,4230,16,249,3965
+令和5,2023,歩行者妨害等,Obstruction of pedestrians， etc.,900,919,8,133,778
+令和5,2023,横断自転車妨害等,Obstruction of crossing bicycles， etc.,143,148,1,4,143
+令和5,2023,徐行場所違反,Slow down violation ,59,65,-,4,61
+令和5,2023,指定場所一時不停止等,Stop sign， etc. violation,1030,1174,2,128,1044
+令和5,2023,酒酔い運転,Driving while intoxicated,32,38,1,4,33
+令和5,2023,過労・薬物,Driving while drowsy or under the influence of drugs,72,120,1,7,112
+令和5,2023,安全運転義務違反,Violation of safe driving obligations,22519,25206,53,687,24466
+令和5,2023,安全不確認ドア開放等,Opening of door without checking for safety， etc.,242,246,1,18,227
+令和5,2023,その他,Others,674,710,5,33,672
+令和5,2023,調査不能,Cause undetermined,74,93,-,6,87
+,,,,,,,,
+東京都統計年鑑（令和5年）TOKYO STATISTICAL YEARBOOK ( 2023 ) 20  司法・警察・消防 20  JUSTICE， POLICE， AND FIRE FIGHTING SERVICES,,,,,,,,
+20-13  車両がわの事故原因による人身事故発生件数及び死傷者数 （平成31・令和元～令和5年） 20-13 TRAFFIC ACCIDENTS CAUSED BY VEHICLES RESULTING IN INJURY OR DEATH AND PERSONS KILLED OR INJURED IN THE ACCIDENTS ( 2019-2023 ),,,,,,,,
+注 1) 発生件数及び死傷者数とも第1当事者からみた数である。,,,,,,,,
+2) 第1当事者とは，過失（違反）がより重いか又は過失（違反）が同程度の場合にあっては，被害がより小さい方の当事者をいう。,,,,,,,,
+3) 調査不能とは，違反行為の種別が不明な場合をいう。,,,,,,,,
+"Note: 1) ""Accidents total"" and ""Killed or injured"" are counted from the first party perspective.",,,,,,,,
+2) The party whose degree of negligence (violation) is more serious than the other party is the first party. When the degree of negligence (violation) is the same， the party that suffers less damage is the first party.,,,,,,,,
+"3) ""Cause undetermined"" refers to cases for which the kind of violation committed is unknown.",,,,,,,,
+資料：警視庁総務部文書課 「警視庁の統計」 Source: Metropolitan Police Department， TMG,,,,,,,,

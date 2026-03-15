@@ -1,0 +1,72 @@
+﻿年次,Year,区分階層,種類,Type,種類,Type,種類,Type,取扱総数 Total number of cases handled,旧受 Previously received,新受計 Newly received total,手続開始内訳  Breakdown of case proceedings commenced／申告 Stated／職員受 Received by officials,手続開始内訳  Breakdown of case proceedings commenced／申告 Stated／委員受 Received by commissioners,手続開始内訳  Breakdown of case proceedings commenced／委員通報 Notified by commissioners,手続開始内訳  Breakdown of case proceedings commenced／関係官公署の通報 Reported by relevant public authorities,手続開始内訳  Breakdown of case proceedings commenced／情報 Information,手続開始内訳  Breakdown of case proceedings commenced／移送 Transferred,処理件数 Total number of cases disposed,処理内訳 Breakdown of cases processed／措置 Measures／援助 Assisted,処理内訳 Breakdown of cases processed／措置 Measures／調整 Adjusted,処理内訳 Breakdown of cases processed／措置 Measures／要請 Requested,処理内訳 Breakdown of cases processed／措置 Measures／説示 Instructed,処理内訳 Breakdown of cases processed／措置 Measures／勧告 Advised,処理内訳 Breakdown of cases processed／措置 Measures／通告 Informed,処理内訳 Breakdown of cases processed／措置 Measures／告発 Indicted,処理内訳 Breakdown of cases processed／措置猶予 Suspension of sentence,処理内訳 Breakdown of cases processed／侵犯事実不存在 Non-existence of facts about infringement,処理内訳 Breakdown of cases processed／侵犯事実不明確 Uncertainty of facts about infringement,処理内訳 Breakdown of cases processed／打切り Closed,処理内訳 Breakdown of cases processed／中止 Discontinued,処理内訳 Breakdown of cases processed／移送 Transferred,処理内訳 Breakdown of cases processed／啓発 Admonished,未済 Pending
+令和4,2022,0,総数,Total,,,,,599,86,513,424,40,-,8,6,35,548,322,5,86,42,-,-,-,-,-,74,17,1,-,4,51
+令和5,2023,0,総数,Total,,,,,535,51,484,396,34,-,17,1,36,427,284,1,33,34,-,-,-,1,-,58,15,-,-,10,108
+令和5,2023,1,公務員等の職務執行に伴う侵犯事件,Cases of infringement by public servants in the execution of their duties　　　　　　　　　　　　,,,,,130,4,126,113,11,-,-,-,2,121,101,-,-,-,-,-,-,1,-,16,3,-,-,2,9
+令和5,2023,1,特別公務員による侵犯,Infringement by special public officials,警察官によるもの,By policemen,,,3,-,3,3,-,-,-,-,-,3,1,-,-,-,-,-,-,-,-,2,-,-,-,-,-
+令和5,2023,1,特別公務員による侵犯,Infringement by special public officials,その他の特別公務員,By other special public officials,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,1,教育職員による侵犯,Infringement by education personnel,体罰,Corporal punishment ,,,4,-,4,4,-,-,-,-,-,4,3,-,-,-,-,-,-,-,-,-,1,-,-,-,-
+令和5,2023,1,教育職員による侵犯,Infringement by education personnel,その他,Others,,,30,1,29,29,-,-,-,-,-,27,19,-,-,-,-,-,-,1,-,6,1,-,-,1,3
+令和5,2023,1,学校におけるいじめ,Bullying at school　　　　　　　　　　　　　　,,,,,82,-,82,71,11,-,-,-,-,81,77,-,-,-,-,-,-,-,-,4,-,-,-,-,1
+令和5,2023,1,刑務職員による侵犯,Infringement by prison personnel,,,,,3,2,1,1,-,-,-,-,-,3,-,-,-,-,-,-,-,-,-,3,-,-,-,-,-
+令和5,2023,1,その他の公務員による侵犯,Infringement by other public servants,国家公務員,National public servants,,,2,-,2,-,-,-,-,-,2,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,2
+令和5,2023,1,その他の公務員による侵犯,Infringement by other public servants,地方公務員,Local government servants,,,6,1,5,5,-,-,-,-,-,3,1,-,-,-,-,-,-,-,-,1,1,-,-,1,3
+令和5,2023,1,その他の公務員による侵犯,Infringement by other public servants,その他,Others,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,私人間の侵犯事件,Infringement cases among private citizens,,,,,405,47,358,283,23,-,17,1,34,306,183,1,33,34,-,-,-,-,-,42,12,-,-,8,99
+令和5,2023,2,人身売買,Human trafficking  ,,,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,売春に伴う侵犯,Infringement relating to prostitution,,,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,暴行虐待,Violence and abuse,家族間におけるもの,Among family members,夫の妻に対するもの,From husband to wife　　　　　　　　　　　　　　,8,-,8,8,-,-,-,-,-,8,8,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,暴行虐待,Violence and abuse,家族間におけるもの,Among family members,妻の夫に対するもの,From wife to husband 　　　　　　　　　　　　　　,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,暴行虐待,Violence and abuse,家族間におけるもの,Among family members,親の子に対するもの,From parent to child 　　　　　　　　　　　　　　,18,-,18,16,2,-,-,-,-,17,17,-,-,-,-,-,-,-,-,-,-,-,-,-,1
+令和5,2023,2,暴行虐待,Violence and abuse,家族間におけるもの,Among family members,子の親に対するもの,From child to parent 　　　　　　　　　　　　　　,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,暴行虐待,Violence and abuse,家族間におけるもの,Among family members,その他,Others,1,-,1,1,-,-,-,-,-,1,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,暴行虐待,Violence and abuse,その他,Others,,,9,-,9,9,-,-,-,-,-,7,7,-,-,-,-,-,-,-,-,-,-,-,-,-,2
+令和5,2023,2,私的制裁,Lynching,,,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,医療に関する侵犯,Infringement related to medical care,,,,,1,-,1,1,-,-,-,-,-,1,-,-,-,-,-,-,-,-,-,1,-,-,-,-,-
+令和5,2023,2,人身の自由に対する侵犯,Infringement of personal liberty,精神保健法関係,Related to the Mental Health Act ,,,3,-,3,3,-,-,-,-,-,1,-,-,-,-,-,-,-,-,-,1,-,-,-,-,2
+令和5,2023,2,人身の自由に対する侵犯,Infringement of personal liberty,その他,Others　　　　　　　　　　　　　　　　　　　　　　　,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,社会福祉施設における侵犯,Infringement in social welfare facilities,施設職員によるもの,By staff of facilities,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,社会福祉施設における侵犯,Infringement in social welfare facilities,その他,Others　　　　　　　　　　　　　　　　　　　　　　　,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,村八分,Social ostracism,,,,,1,-,1,1,-,-,-,-,-,1,-,-,-,-,-,-,-,-,-,-,1,-,-,-,-
+令和5,2023,2,差別待遇,Discriminative treatment ,女性に関するもの,Against women,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,差別待遇,Discriminative treatment ,高齢者に関するもの,Against elderly people,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,差別待遇,Discriminative treatment ,障害者に関するもの,Against persons with disabilities,,,10,3,7,7,-,-,-,-,-,5,2,-,-,1,-,-,-,-,-,2,-,-,-,1,5
+令和5,2023,2,差別待遇,Discriminative treatment ,同和問題に関するもの,Related to Dowa problem,,,51,2,49,1,-,-,13,1,34,37,1,-,2,32,-,-,-,-,-,2,-,-,-,1,14
+令和5,2023,2,差別待遇,Discriminative treatment ,アイヌの人々に関するもの,Against Ainu people,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,差別待遇,Discriminative treatment ,外国人に関するもの,Against foreigners,,,9,1,8,3,1,-,4,-,-,7,1,1,-,1,-,-,-,-,-,3,-,-,-,4,2
+令和5,2023,2,差別待遇,Discriminative treatment ,ＨＩＶ感染者等に関するもの,Against HIV-positive patients， etc.,,,2,-,2,2,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,2
+令和5,2023,2,差別待遇,Discriminative treatment ,刑を終えた人に関するもの,Against ex-convicts  ,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,差別待遇,Discriminative treatment ,その他,Others,,,7,3,4,3,1,-,-,-,-,6,1,-,-,-,-,-,-,-,-,5,-,-,-,-,1
+令和5,2023,2,参政権に対する侵犯,Infringement of suffrage ,,,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,プライバシーに関する侵犯,Infringement of privacy,報道機関等,By media， etc. ,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,プライバシーに関する侵犯,Infringement of privacy,インターネット等によるもの,Via Internet， etc. ,,,166,35,131,129,2,-,-,-,-,109,50,-,31,-,-,-,-,-,-,18,10,-,-,1,57
+令和5,2023,2,プライバシーに関する侵犯,Infringement of privacy,相隣間におけるもの,Among neighbors,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,プライバシーに関する侵犯,Infringement of privacy,その他,Others,,,5,-,5,4,1,-,-,-,-,3,1,-,-,-,-,-,-,-,-,1,1,-,-,-,2
+令和5,2023,2,集会，結社及び表現の自由に対する侵犯,Infringement of the freedom of gathering， association and expression,,,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,信教の自由に対する侵犯,Infringement of the freedom of religion,,,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,教育を受ける権利への侵犯,Infringement of the right of receiving education ,,,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,労働権に対する侵犯,Infringement of the right of labor,不当労働行為,Unfair labor practice,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,労働権に対する侵犯,Infringement of the right of labor,労働基準法違反,Violation of the Labor Standards Act ,,,4,-,4,2,2,-,-,-,-,3,3,-,-,-,-,-,-,-,-,-,-,-,-,-,1
+令和5,2023,2,労働権に対する侵犯,Infringement of the right of labor,その他,Others　　,,,77,3,74,63,11,-,-,-,-,70,62,-,-,-,-,-,-,-,-,8,-,-,-,-,7
+令和5,2023,2,住居・生活の安全に対する侵犯,Infringement of the safety of dwelling and living,自力執行,Execution by oneself,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,住居・生活の安全に対する侵犯,Infringement of the safety of dwelling and living,相隣間におけるもの,Between neighbors,小公害,Small pollution,1,-,1,1,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,1
+令和5,2023,2,住居・生活の安全に対する侵犯,Infringement of the safety of dwelling and living,相隣間におけるもの,Between neighbors,その他,Others,2,-,2,2,-,-,-,-,-,2,2,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,住居・生活の安全に対する侵犯,Infringement of the safety of dwelling and living,公害,Pollution,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,住居・生活の安全に対する侵犯,Infringement of the safety of dwelling and living,不動産,Real estate,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,住居・生活の安全に対する侵犯,Infringement of the safety of dwelling and living,その他,Others,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,強制強要,Coercion,家族間におけるもの,Among family members,夫の妻に対するもの,From husband to wife　　　　　　　　　　　　　　,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,強制強要,Coercion,家族間におけるもの,Among family members,妻の夫に対するもの,From wife to husband 　　　　　　　　　　　　　　,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,強制強要,Coercion,家族間におけるもの,Among family members,親の子に対するもの,From parent to child 　　　　　　　　　　　　　　,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,強制強要,Coercion,家族間におけるもの,Among family members,子の親に対するもの,From child to parent 　　　　　　　　　　　　　　,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,強制強要,Coercion,家族間におけるもの,Among family members,その他,Others,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,強制強要,Coercion,セクシュアル・ハラスメント,Sexual harassment,,,16,-,16,14,2,-,-,-,-,16,16,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,強制強要,Coercion,ストーカー,Stalking,,,8,-,8,7,1,-,-,-,-,8,8,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,強制強要,Coercion,その他,Others,,,4,-,4,4,-,-,-,-,-,2,1,-,-,-,-,-,-,-,-,1,-,-,-,1,2
+令和5,2023,2,組織，多衆の圧力による侵犯,Infringement by organizations or pressure of the masses,,,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,交通事故,Traffic accidents,,,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,犯罪被害者,Victims of crimes,,,,,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+令和5,2023,2,その他,Others,,,,,2,-,2,2,-,-,-,-,-,2,2,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+東京都統計年鑑（令和5年）TOKYO STATISTICAL YEARBOOK ( 2023 ) 20  司法・警察・消防 20  JUSTICE， POLICE， AND FIRE FIGHTING SERVICES,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+20-7  人権侵犯事件の種類別件数 （令和4， 5年） 20-7  CASES OF INFRINGEMENT ON HUMAN RIGHTS BY TYPE ( 2022 and 2023 ),,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+資料：東京法務局人権擁護部第二課 Source: Tokyo Legal Affairs Bureau,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+区分階層(0:総数　1:区分　2:区分),,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
